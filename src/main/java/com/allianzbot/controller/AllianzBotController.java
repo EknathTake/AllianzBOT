@@ -18,6 +18,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.mock.web.MockMultipartFile;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
+import org.springframework.validation.BindingResult;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -81,8 +82,9 @@ public class AllianzBotController {
 		batchJobToStoreFiles();
 		ModelAndView modelAndView = new ModelAndView("home");
 		modelAndView.addObject("message", "All Documents stored. Successfully");
-		//AllianzBotSolrCreateDocumentResponse storeDocument = botTextExtractorProcess.storeDocument(file);
-		return modelAndView ;
+		// AllianzBotSolrCreateDocumentResponse storeDocument =
+		// botTextExtractorProcess.storeDocument(file);
+		return modelAndView;
 
 	}
 
@@ -122,10 +124,16 @@ public class AllianzBotController {
 
 	@CrossOrigin(origins = { "*" })
 	@PutMapping(value = "/update/document")
-	public ResponseEntity<AllianzBotSolrCreateDocumentResponse> updateSolrDocument(@RequestBody AllianzBotSentence document)
+	public ResponseEntity<AllianzBotSolrCreateDocumentResponse> updateSolrDocument(
+			@RequestBody @Valid AllianzBotSentence document, BindingResult bindingResult)
 			throws SolrServerException, IOException, AllianzBotException, SAXException, TikaException {
 
 		log.info("Inside AllianzBotController.updateSolrDocument Document is :{}", document);
+
+		if (bindingResult.hasErrors()) {
+			log.info("Inside AllianzBotController.updateSolrDocument validation fail");
+			throw new AllianzBotException(400, bindingResult.getAllErrors().toString());
+		}
 		AllianzBotSolrCreateDocumentResponse allianzBotControllerResponse = botTextExtractorProcess
 				.updateScore(document);
 		log.debug("Inside AllianzBotController.updateSolrDocument AllianzBotSolrCreateDocumentResponse is {}",
