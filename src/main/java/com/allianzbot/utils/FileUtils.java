@@ -66,7 +66,8 @@ public class FileUtils {
 					.filter(keyword -> !STOPWORDS.contains(keyword))
 					.filter(keyword -> !containsEqualsIgnoreCase(STOPWORDS, keyword))
 					.collect(Collectors.joining(" "));
-			return StringUtils.isNotEmpty(collectQuery) ? collectQuery : sentence;
+			return (StringUtils.isNotEmpty(collectQuery) ? collectQuery : sentence)
+					.replaceAll(AllianzBotConstants.AB_SPECIAL_CHARACTERS, " ");
 		}
 
 		return sentence;

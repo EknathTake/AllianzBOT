@@ -2,6 +2,7 @@ package com.allianzbot.dto;
 
 import java.io.Serializable;
 
+import javax.validation.constraints.Max;
 import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 
@@ -18,19 +19,19 @@ public class AllianzBotSentence implements Serializable {
 	 */
 	private static final long serialVersionUID = 3411583878782802899L;
 
-	@NotEmpty
+	@NotEmpty(message="Null id not acceptable.")
 	private String id;
 
 	/**
 	 * question
 	 */
-	@NotEmpty
+	@NotEmpty(message="Null question not acceptable.")
 	private String question;
 
 	/**
 	 * answer
 	 */
-	@NotEmpty
+	@NotEmpty(message="Null answer not acceptable.")
 	private String answer;
 
 	/**
@@ -42,7 +43,8 @@ public class AllianzBotSentence implements Serializable {
 	/**
 	 * hits
 	 */
-	@Min(value = 0L, message = "Invalid value for the hits")
+	@Min(value = -1L, message = "Invalid value for the hits, atleast value -1  allowed.")
+	@Max(value = 1L, message = "Invalid value for the hits, only atleast value 1 allowed.")
 	private double hits;
 
 	public String getId() {
