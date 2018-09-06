@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:beans="http://www.springframework.org/schema/beans"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+	http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd">
+
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	<beans:bean id="multipartResolver"
+		class="org.springframework.web.multipart.commons.CommonsMultipartResolver">
+		<!-- setting maximum upload size 9.9MB -->
+		<beans:property name="maxUploadSize" value="9999999" />
+	</beans:bean>
+
+	<!-- <beans:bean id="bodyContentHandler"
+		class="org.apache.tika.sax.BodyContentHandler" scope="prototype">
+		<beans:constructor-arg type="int"
+			value="2147483647"></beans:constructor-arg>
+	</beans:bean>
+	<beans:bean id="metadata"
+		class="org.apache.tika.metadata.Metadata" scope="prototype"></beans:bean>
+	<beans:bean id="parseContext"
+		class="org.apache.tika.parser.ParseContext" scope="prototype"></beans:bean> -->
+
+</beans>
