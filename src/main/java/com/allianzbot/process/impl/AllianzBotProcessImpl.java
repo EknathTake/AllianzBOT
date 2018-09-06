@@ -223,8 +223,8 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 			log.info("User query:{}", query);
 
 			Map<String, String> queryMap = new HashMap<>();
-			queryMap.put(AllianzBotConstants.SOLR_FIELD_CONTENT, query);
-			queryMap.put(AllianzBotConstants.SOLR_FIELD_QUESTION, query);
+			queryMap.put(AllianzBotConstants.AB_SOLR_FIELD_CONTENT, query);
+			queryMap.put(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, query);
 
 			return allianzBotSolrService.searchDocuments(queryMap);
 		} else {
