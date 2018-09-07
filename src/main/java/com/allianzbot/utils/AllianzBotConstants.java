@@ -8,7 +8,7 @@ public class AllianzBotConstants {
 
 	public static final String AB_STAR = "*";
 
-	public static final int AB_MAX_ROWS = 100;
+	public static final int AB_MAX_ROWS = 50;
 
 	public static final String AB_OR = "OR";
 
