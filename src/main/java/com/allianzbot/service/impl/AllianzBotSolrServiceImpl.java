@@ -18,6 +18,7 @@ import javax.inject.Named;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -105,16 +106,16 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	}
 
 	@Override
-	public AllianzBotSolrSearchDocumentResponse searchDocuments(Map<String, String> queryMap)
+	public AllianzBotSolrSearchDocumentResponse searchDocuments(String query)
 			throws SolrServerException, IOException, AllianzBotException {
 
 		// prepare for query and keywords
-		List<String> builder = buildQueryAndKeywords(queryMap);
+		final String solrSearchQuery = buildQueryAndKeywords(query);
 
 		// Preparing to Solr query
 
 		SolrQuery solrQuery = new SolrQuery();
-		solrQuery.setQuery(builder.get(1))
+		solrQuery.setQuery(solrSearchQuery)
 				.setStart(0)
 				.setRows(AllianzBotConstants.AB_MAX_ROWS)
 				.setHighlight(true)
@@ -125,7 +126,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		log.info("Solr Query:{}", solrQuery);
 		SolrDocumentList documents = client.query(solrQuery).getResults();
 
-		return mapToAllianzBotSolrSearchDocumentResponse(builder.get(0), documents);
+		return mapToAllianzBotSolrSearchDocumentResponse(query, documents);
 	}
 
 	/**
@@ -139,33 +140,20 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	 *         1 st index.
 	 * @throws AllianzBotException
 	 */
-	private List<String> buildQueryAndKeywords(Map<String, String> queryMap) throws AllianzBotException {
-		StringBuilder queryBuilder = new StringBuilder();
-		StringBuilder keywordsBuilder = new StringBuilder();
-
-		if (queryMap.size() > 0) {
-			List<String> keys = queryMap.keySet().stream().collect(Collectors.toList());
-			List<String> values = queryMap.values().stream().collect(Collectors.toList());
-			IntStream.range(0, keys.size()).forEach(index -> {
-				if (index == 0) {
-					// collect the user query keywords, useful for filtering
-					keywordsBuilder.append(values.get(index));
-
-					// bulding the user query
-					queryBuilder.append(keys.get(index)).append(AllianzBotConstants.AB_COLON).append(values.get(index));
-				} else {
-					// bulding the user query
-					queryBuilder.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
-							.append(AllianzBotConstants.AB_SPACE).append(keys.get(index))
-							.append(AllianzBotConstants.AB_COLON).append(values.get(index));
-				}
-			});
-
-			List<String> builder = new ArrayList<>();
-			builder.add(keywordsBuilder.toString());
-			builder.add(queryBuilder.toString());
-			return builder;
-
+	private String buildQueryAndKeywords(String query) throws AllianzBotException {
+		if (StringUtils.isNotEmpty(query)) {
+			StringBuilder queryBuilder = new StringBuilder();
+			queryBuilder.append(AllianzBotConstants.AB_SOLR_FIELD_CONTENT)
+					.append(AllianzBotConstants.AB_COLON)
+					.append(query)
+					.append(AllianzBotConstants.AB_SPACE)
+					.append(AllianzBotConstants.AB_OR)
+					.append(AllianzBotConstants.AB_SPACE)
+					.append(AllianzBotConstants.AB_SOLR_FIELD_QUESTION)
+					.append(AllianzBotConstants.AB_COLON)
+					.append(query);
+			return queryBuilder.toString();
+			
 		} else
 			throw new AllianzBotException(HttpStatus.BAD_REQUEST.value(), "Please enter your query.");
 	}

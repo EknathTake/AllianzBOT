@@ -221,12 +221,7 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 			list.removeIf(s -> !seen.add(s));
 			query = FileUtils.removeStopWords(String.join(" ", list));
 			log.info("User query:{}", query);
-
-			Map<String, String> queryMap = new HashMap<>();
-			queryMap.put(AllianzBotConstants.AB_SOLR_FIELD_CONTENT, query);
-			queryMap.put(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, query);
-
-			return allianzBotSolrService.searchDocuments(queryMap);
+			return allianzBotSolrService.searchDocuments(query);
 		} else {
 			throw new AllianzBotException(HttpStatus.BAD_REQUEST.value(), "Please enter your question.");
 		}

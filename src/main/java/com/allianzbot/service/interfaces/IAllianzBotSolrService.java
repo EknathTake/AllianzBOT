@@ -35,7 +35,7 @@ public interface IAllianzBotSolrService {
 	 * @param keywords
 	 * @return SolrDocumentList
 	 */
-	AllianzBotSolrSearchDocumentResponse searchDocuments(Map<String, String> queryMap)
+	AllianzBotSolrSearchDocumentResponse searchDocuments(String query)
 			throws SolrServerException, IOException, AllianzBotException;
 
 	/**
