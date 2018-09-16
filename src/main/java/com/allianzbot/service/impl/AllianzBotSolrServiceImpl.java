@@ -3,7 +3,6 @@ package com.allianzbot.service.impl;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Comparator;
-import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -12,6 +11,8 @@ import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
+import javax.annotation.PostConstruct;
+import javax.annotation.PreDestroy;
 import javax.inject.Inject;
 import javax.inject.Named;
 
@@ -65,19 +66,19 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	@Override
 	public UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse)
 			throws SolrServerException, IOException {
-		client = new HttpSolrClient.Builder(SOLR_COLLECTION1).build();
+
 		SolrInputDocument doc = null;
 		Object content = allianzBotServiceResponse.getContent();
 		if (content instanceof LinkedHashMap) {
 
-			// in following HashMap Key is Row number and values are all the Columns
+			// in following HashMap Key is Row number and values are all the
+			// Columns
 			LinkedHashMap<Integer, List<String>> document = (LinkedHashMap<Integer, List<String>>) content;
 			// iterate through all the columns
 			int i = 0;
 			for (Map.Entry<Integer, List<String>> entry : document.entrySet()) {
-				Integer rows = entry.getKey();
 				List<String> columns = entry.getValue();
-				if (columns.size() == 2 && rows > 0) {
+				if (columns.size() == 2 && CollectionUtils.isNotEmpty(columns)) {
 					doc = new SolrInputDocument();
 					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS, new Double(0.0));
 					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ID,
@@ -111,9 +112,12 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		List<String> builder = buildQueryAndKeywords(queryMap);
 
 		// Preparing to Solr query
-		client = new HttpSolrClient.Builder(SOLR_COLLECTION1).build();
+
 		SolrQuery solrQuery = new SolrQuery();
-		solrQuery.setQuery(builder.get(1)).setStart(0).setRows(AllianzBotConstants.AB_MAX_ROWS).setHighlight(true)
+		solrQuery.setQuery(builder.get(1))
+				.setStart(0)
+				.setRows(AllianzBotConstants.AB_MAX_ROWS)
+				.setHighlight(true)
 				.setFields(AllianzBotConstants.AB_SOLR_FIELD_ID, AllianzBotConstants.AB_SOLR_FIELD_CONTENT,
 						AllianzBotConstants.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.AB_SOLR_FIELD_ANSWER,
 						AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
@@ -126,13 +130,13 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 	/**
 	 * This method will prepare for user query and keywords. The query will be
-	 * prepared in following format: content:search term OR question:search term The
-	 * keywords will be generated followed by space.
+	 * prepared in following format: content:search term OR question:search term
+	 * The keywords will be generated followed by space.
 	 * 
 	 * @param queryMap
 	 * @return The List, the query and keywords will be returned in list. In the
-	 *         list the keywords can be found at 0 th index and query will be at 1
-	 *         st index.
+	 *         list the keywords can be found at 0 th index and query will be at
+	 *         1 st index.
 	 * @throws AllianzBotException
 	 */
 	private List<String> buildQueryAndKeywords(Map<String, String> queryMap) throws AllianzBotException {
@@ -152,8 +156,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 				} else {
 					// bulding the user query
 					queryBuilder.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
-							.append(AllianzBotConstants.AB_SPACE).append(keys.get(index)).append(AllianzBotConstants.AB_COLON)
-							.append(values.get(index));
+							.append(AllianzBotConstants.AB_SPACE).append(keys.get(index))
+							.append(AllianzBotConstants.AB_COLON).append(values.get(index));
 				}
 			});
 
@@ -183,27 +187,33 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		Set<AllianzBotSentence> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
 		// tokenize to query
 		String[] tokenizedQuery = allianzBotOpenNlpService.tokenize(keywords);
-		documents.stream().forEach(x -> {
+		for (int x = 0; x < documents.size(); x++) {
 			@SuppressWarnings("unchecked")
-			List<String> listAnswers = (List<String>) x.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ANSWER);
+			List<String> listAnswers = (List<String>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ANSWER);
 			@SuppressWarnings("unchecked")
-			List<String> listQuestions = (List<String>) x.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_QUESTION);
-			final String id = new String(x.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ID).toString());
+			List<String> listQuestions = (List<String>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_QUESTION);
+			final String id = new String(
+					documents.get(x).getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ID).toString());
 			@SuppressWarnings("unchecked")
-			final List<Double> hits = (List<Double>) x.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
+			final List<Double> hits = (List<Double>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
 
 			// log.info("-------------ANSWER------------------");
 			if (CollectionUtils.isNotEmpty(listAnswers) && CollectionUtils.isNotEmpty(listQuestions)
 					&& CollectionUtils.isNotEmpty(hits)) {
-				if (listAnswers.get(0).split(" ").length > 2)
-					result.add(mapToAllianzBotSentence(id, listQuestions.get(0), listAnswers.get(0),
-							new Double(x.get(AllianzBotConstants.SOLR_FIELD_SCORE).toString()), hits.get(0)));
+				Double score = new Double(documents.get(x).get(AllianzBotConstants.SOLR_FIELD_SCORE).toString());
+				if (Double.compare(score, 0) > 0) {
+					result.add(
+							mapToAllianzBotSentence(id, listQuestions.get(0), listAnswers.get(0), score, hits.get(0)));
+				}
 			}
 
 			// log.info("-------------CONTENT------------------");
 			@SuppressWarnings("unchecked")
-			List<String> contents = (List<String>) x.get(AllianzBotConstants.AB_SOLR_FIELD_CONTENT);
-			if (CollectionUtils.isNotEmpty(contents) && contents.size() > 0) {
+			List<String> contents = (List<String>) documents.get(x).get(AllianzBotConstants.AB_SOLR_FIELD_CONTENT);
+			if (CollectionUtils.isNotEmpty(contents)) {
 				String content = contents.get(0);
 				try {
 					// raw sentences
@@ -226,7 +236,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 							final double score = calculateScore(features, tokenizedSentence);
 							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
 									allianzBotSentence.getAnswer(), score, allianzBotSentence.getHits());
-							if (allianzBotNewSentence.getAnswer().split(" ").length > 2)
+							if (Double.compare(allianzBotNewSentence.getScore(), 0) > 0)
 								result.add(allianzBotNewSentence);
 
 						}
@@ -237,15 +247,15 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 					throw new AllianzBotRunTimeException(000, e.getMessage());
 				}
 			}
-		});
+
+		}
 
 		// remove all the duplicate answers
-		Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotScoreAndHitsComparator());
+		Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotAnswerComparator());
 		newAbs.addAll(result);
-		//newAbs.sort(new AllianzBotScoreAndHitsComparator());
-
 		result.clear();
-		// sort all the answers by the high score
+
+		// sort all the answers by the high and score
 		result.addAll(newAbs);
 		newAbs.clear();
 
@@ -270,28 +280,12 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	}
 
 	@Override
-	// public UpdateResponse updateScore(String documentId, double hitCount)
 	public void updateScore(AllianzBotSentence document) throws SolrServerException, IOException, AllianzBotException {
-		
-		Map<String, String> queryMap = new HashMap<>();
-		queryMap.put(AllianzBotConstants.AB_SOLR_FIELD_ID, document.getId());
-		AllianzBotSolrSearchDocumentResponse result = searchDocuments(queryMap);
 
-		client = new HttpSolrClient.Builder(SOLR_COLLECTION1).build();
 		SolrInputDocument solrInputDocument = new SolrInputDocument();
-
-		/** Document already exist, only update the score here */
-		if (result.getDocuments().size() > 0) {
-			AllianzBotSentence allianzBotSentence = result.getDocuments().get(0);
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, allianzBotSentence.getId());
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS,
-					Double.sum(allianzBotSentence.getHits(), document.getHits()));
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, allianzBotSentence.getQuestion());
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ANSWER, allianzBotSentence.getAnswer());
-		}
-		/** Document not found, Insert new document here. */
-		else {
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, DigestUtils.md5Hex(document.getQuestion() + document.getAnswer()));
+		if (null != document) {
+			String sentence = FileUtils.removeStopWords(document.getQuestion().concat(document.getAnswer()));
+			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, DigestUtils.md5Hex(sentence));
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS, document.getHits());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, document.getQuestion());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ANSWER, document.getAnswer());
@@ -299,6 +293,20 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		client.add(solrInputDocument);
 		client.commit();
 
+	}
+
+	@PostConstruct
+	public void initSolr() {
+		log.info("SOLR server is starting.");
+		client = new HttpSolrClient.Builder(SOLR_COLLECTION1).build();
+		log.info("SOLR server is started.");
+	}
+
+	@PreDestroy
+	public void destroySolr() throws IOException {
+
+		client.close();
+		log.info("SOLR server is stopped.");
 	}
 }
 
