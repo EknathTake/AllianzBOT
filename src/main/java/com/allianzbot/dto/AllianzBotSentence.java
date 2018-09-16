@@ -37,11 +37,14 @@ public class AllianzBotSentence implements Serializable {
 	/**
 	 * score
 	 */
+	//@Min(value = 0L, message = "Invalid value for the score")
 	private double score;
 
 	/**
 	 * hits
 	 */
+	//@Min(value = -1L, message = "Invalid value for the hits, atleast value -1  allowed.")
+	//@Max(value = 1L, message = "Invalid value for the hits, only atleast value 1 allowed.")
 	private double hits;
 
 	public String getId() {

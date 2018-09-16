@@ -188,6 +188,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		// tokenize to query
 		String[] tokenizedQuery = allianzBotOpenNlpService.tokenize(keywords);
 		for (int x = 0; x < documents.size(); x++) {
+
 			@SuppressWarnings("unchecked")
 			List<String> listAnswers = (List<String>) documents.get(x)
 					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ANSWER);
