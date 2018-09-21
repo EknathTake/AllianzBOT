@@ -1,7 +1,6 @@
 package com.allianzbot.service.impl;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -9,7 +8,7 @@ import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
+import java.util.stream.Stream;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
@@ -116,12 +115,12 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery.setQuery(solrSearchQuery)
-				.setStart(0)
-				.setRows(AllianzBotConstants.AB_MAX_ROWS)
-				.setHighlight(true)
-				.setFields(AllianzBotConstants.AB_SOLR_FIELD_ID, AllianzBotConstants.AB_SOLR_FIELD_CONTENT,
-						AllianzBotConstants.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.AB_SOLR_FIELD_ANSWER,
-						AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
+		.setStart(0)
+		.setRows(AllianzBotConstants.AB_MAX_ROWS)
+		.setFields(
+				AllianzBotConstants.AB_SOLR_FIELD_ID, AllianzBotConstants.AB_SOLR_FIELD_CONTENT,
+				AllianzBotConstants.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.AB_SOLR_FIELD_ANSWER,
+				AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
 
 		log.info("Solr Query:{}", solrQuery);
 		SolrDocumentList documents = client.query(solrQuery).getResults();
@@ -131,13 +130,13 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 	/**
 	 * This method will prepare for user query and keywords. The query will be
-	 * prepared in following format: content:search term OR question:search term
-	 * The keywords will be generated followed by space.
+	 * prepared in following format: content:search term OR question:search term The
+	 * keywords will be generated followed by space.
 	 * 
 	 * @param queryMap
 	 * @return The List, the query and keywords will be returned in list. In the
-	 *         list the keywords can be found at 0 th index and query will be at
-	 *         1 st index.
+	 *         list the keywords can be found at 0 th index and query will be at 1
+	 *         st index.
 	 * @throws AllianzBotException
 	 */
 	private String buildQueryAndKeywords(String query) throws AllianzBotException {
@@ -145,15 +144,14 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			StringBuilder queryBuilder = new StringBuilder();
 			queryBuilder.append(AllianzBotConstants.AB_SOLR_FIELD_CONTENT)
 					.append(AllianzBotConstants.AB_COLON)
-					.append(query)
-					.append(AllianzBotConstants.AB_SPACE)
+					.append(query).append(AllianzBotConstants.AB_SPACE)
 					.append(AllianzBotConstants.AB_OR)
 					.append(AllianzBotConstants.AB_SPACE)
 					.append(AllianzBotConstants.AB_SOLR_FIELD_QUESTION)
 					.append(AllianzBotConstants.AB_COLON)
 					.append(query);
 			return queryBuilder.toString();
-			
+
 		} else
 			throw new AllianzBotException(HttpStatus.BAD_REQUEST.value(), "Please enter your query.");
 	}
@@ -174,7 +172,9 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		AllianzBotSolrSearchDocumentResponse allianzBotSolrServiceResponse = new AllianzBotSolrSearchDocumentResponse();
 		Set<AllianzBotSentence> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
 		// tokenize to query
-		String[] tokenizedQuery = allianzBotOpenNlpService.tokenize(keywords);
+		List<String> tokensOfTheQuery = Stream.of(allianzBotOpenNlpService.tokenize(keywords))
+				.map(s-> s.toLowerCase())
+				.collect(Collectors.toList());
 		for (int x = 0; x < documents.size(); x++) {
 
 			@SuppressWarnings("unchecked")
@@ -183,8 +183,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			@SuppressWarnings("unchecked")
 			List<String> listQuestions = (List<String>) documents.get(x)
 					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_QUESTION);
-			final String id = new String(
-					documents.get(x).getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ID).toString());
+			final String id = documents.get(x).getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ID).toString();
 			@SuppressWarnings("unchecked")
 			final List<Double> hits = (List<Double>) documents.get(x)
 					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
@@ -192,7 +191,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			// log.info("-------------ANSWER------------------");
 			if (CollectionUtils.isNotEmpty(listAnswers) && CollectionUtils.isNotEmpty(listQuestions)
 					&& CollectionUtils.isNotEmpty(hits)) {
-				Double score = new Double(documents.get(x).get(AllianzBotConstants.SOLR_FIELD_SCORE).toString());
+				Double score = new Double(
+						documents.get(x).getFieldValue(AllianzBotConstants.SOLR_FIELD_SCORE).toString());
 				if (Double.compare(score, 0) > 0) {
 					result.add(
 							mapToAllianzBotSentence(id, listQuestions.get(0), listAnswers.get(0), score, hits.get(0)));
@@ -211,18 +211,13 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 					for (AllianzBotSentence allianzBotSentence : sentences) {
 						if (null != allianzBotSentence) {
 
-							// calculating the features
-							double features = 0;
-							String[] tokenizedSentence = allianzBotOpenNlpService
+							String[] tokensOfTheSentences = allianzBotOpenNlpService
 									.tokenize(FileUtils.removeStopWords(allianzBotSentence.getAnswer()));
-							for (int i = 0; i < tokenizedSentence.length; i++) {
-								for (int j = 0; j < tokenizedQuery.length; j++) {
-									if (tokenizedSentence[i].equalsIgnoreCase(tokenizedQuery[j]))
-										features++;
-								}
-							}
-
-							final double score = calculateScore(features, tokenizedSentence);
+							// calculating the features
+							final double features = Stream.of(tokensOfTheSentences)
+									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase()))
+									.count();
+							final double score = calculateScore(features, tokensOfTheSentences);
 							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
 									allianzBotSentence.getAnswer(), score, allianzBotSentence.getHits());
 							if (Double.compare(allianzBotNewSentence.getScore(), 0) > 0)
