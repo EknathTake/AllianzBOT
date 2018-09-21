@@ -48,7 +48,7 @@ public class AllianzBotSentence implements Serializable {
 	/**
 	 * dislikes
 	 */
-	private double dislikes;
+	//private double dislikes;
 
 	public String getId() {
 		return id;
@@ -90,14 +90,6 @@ public class AllianzBotSentence implements Serializable {
 		this.likes = likes;
 	}
 
-	public double getDislikes() {
-		return dislikes;
-	}
-
-	public void setDislikes(double dislikes) {
-		this.dislikes = dislikes;
-	}
-
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
@@ -111,8 +103,6 @@ public class AllianzBotSentence implements Serializable {
 		builder.append(score);
 		builder.append(", likes=");
 		builder.append(likes);
-		builder.append(", dislikes=");
-		builder.append(dislikes);
 		builder.append("]");
 		return builder.toString();
 	}

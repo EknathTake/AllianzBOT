@@ -22,8 +22,6 @@ public class AllianzBotConstants {
 
 	public static final String AB_SOLR_FIELD_TOTAL_LIKES = "likes";
 	
-	public static final String AB_SOLR_FIELD_TOTAL_DISLIKES = "dislikes";
-
 	public static final String SOLR_FIELD_SCORE = "score";
 
 	public static final String AB_SPECIAL_CHARACTERS = "[$&+,:;=?@#|'<>.^*()%!-]";

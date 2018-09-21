@@ -1,6 +1,8 @@
 package com.allianzbot.response;
 
 import java.util.List;
+import java.util.Set;
+
 import com.allianzbot.dto.AllianzBotResponseStatus;
 import com.allianzbot.dto.AllianzBotSentence;
 
@@ -13,18 +15,18 @@ import com.allianzbot.dto.AllianzBotSentence;
  */
 public class AllianzBotSolrSearchDocumentResponse {
 
-	private List<AllianzBotSentence> documents;
+	private Set<AllianzBotSentence> documents;
 
 	/**
 	 * If any exception occured it will give us the information regarding exception.
 	 */
 	private AllianzBotResponseStatus error;
 
-	public List<AllianzBotSentence> getDocuments() {
+	public Set<AllianzBotSentence> getDocuments() {
 		return documents;
 	}
 
-	public void setDocuments(List<AllianzBotSentence> documents) {
+	public void setDocuments(Set<AllianzBotSentence> documents) {
 		this.documents = documents;
 	}
 
