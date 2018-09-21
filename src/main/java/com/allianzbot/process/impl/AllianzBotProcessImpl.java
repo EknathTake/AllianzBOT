@@ -208,7 +208,8 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 		if (StringUtils.isNotEmpty(query)) {
 			// get all the lemmas for user query
 			query = query + " "
-					+ Stream.of(allianzBotOpenNlpService.lemmatization(query)).filter(Objects::nonNull)
+					+ Stream.of(allianzBotOpenNlpService.lemmatization(query))
+							.filter(Objects::nonNull)
 							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "O"))
 							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "be"))
 							.distinct()
@@ -220,7 +221,6 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 			TreeSet<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 			list.removeIf(s -> !seen.add(s));
 			query = FileUtils.removeStopWords(String.join(" ", list));
-			log.info("User query:{}", query);
 			return allianzBotSolrService.searchDocuments(query);
 		} else {
 			throw new AllianzBotException(HttpStatus.BAD_REQUEST.value(), "Please enter your question.");
