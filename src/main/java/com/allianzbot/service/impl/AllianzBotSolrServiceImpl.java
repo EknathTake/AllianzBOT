@@ -80,7 +80,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 				List<String> columns = entry.getValue();
 				if (columns.size() == 2 && CollectionUtils.isNotEmpty(columns)) {
 					doc = new SolrInputDocument();
-					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS, new Double(0.0));
+					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, new Double(0.0));
+					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_DISLIKES, new Double(0.0));
 					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ID,
 							DigestUtils.md5Hex(columns.get(0) + columns.get(1)));
 					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, columns.get(0));
@@ -96,7 +97,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		} else {
 			// Indexing Solr Document
 			doc = new SolrInputDocument();
-			doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS, new Double(0.0));
+			doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, new Double(0.0));
+			doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_DISLIKES, new Double(0.0));
 			doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, DigestUtils.md5Hex((String) content));
 			doc.addField(AllianzBotConstants.AB_SOLR_FIELD_CONTENT, (String) content);
 			client.add(doc);
@@ -112,15 +114,15 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		final String solrSearchQuery = buildQueryAndKeywords(query);
 
 		// Preparing to Solr query
-
 		SolrQuery solrQuery = new SolrQuery();
 		solrQuery.setQuery(solrSearchQuery)
-		.setStart(0)
-		.setRows(AllianzBotConstants.AB_MAX_ROWS)
-		.setFields(
-				AllianzBotConstants.AB_SOLR_FIELD_ID, AllianzBotConstants.AB_SOLR_FIELD_CONTENT,
-				AllianzBotConstants.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.AB_SOLR_FIELD_ANSWER,
-				AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
+				.setStart(0)
+				.setRows(AllianzBotConstants.AB_MAX_ROWS)
+				.setFields(
+						AllianzBotConstants.AB_SOLR_FIELD_ID, AllianzBotConstants.AB_SOLR_FIELD_CONTENT,
+						AllianzBotConstants.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.AB_SOLR_FIELD_ANSWER,
+						AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES,
+						AllianzBotConstants.AB_SOLR_FIELD_TOTAL_DISLIKES);
 
 		log.info("Solr Query:{}", solrQuery);
 		SolrDocumentList documents = client.query(solrQuery).getResults();
@@ -185,17 +187,21 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_QUESTION);
 			final String id = documents.get(x).getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ID).toString();
 			@SuppressWarnings("unchecked")
-			final List<Double> hits = (List<Double>) documents.get(x)
-					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS);
+			final List<Double> likes = (List<Double>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES);
+			
+			@SuppressWarnings("unchecked")
+			final List<Double> dislikes = (List<Double>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_DISLIKES);
 
 			// log.info("-------------ANSWER------------------");
 			if (CollectionUtils.isNotEmpty(listAnswers) && CollectionUtils.isNotEmpty(listQuestions)
-					&& CollectionUtils.isNotEmpty(hits)) {
+					&& CollectionUtils.isNotEmpty(likes)&& CollectionUtils.isNotEmpty(dislikes)) {
 				Double score = new Double(
 						documents.get(x).getFieldValue(AllianzBotConstants.SOLR_FIELD_SCORE).toString());
 				if (Double.compare(score, 0) > 0) {
 					result.add(
-							mapToAllianzBotSentence(id, listQuestions.get(0), listAnswers.get(0), score, hits.get(0)));
+							mapToAllianzBotSentence(id, listQuestions.get(0), listAnswers.get(0), score, likes.get(0), dislikes.get(0)));
 				}
 			}
 
@@ -219,7 +225,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 									.count();
 							final double score = calculateScore(features, tokensOfTheSentences);
 							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
-									allianzBotSentence.getAnswer(), score, allianzBotSentence.getHits());
+									allianzBotSentence.getAnswer(), score, allianzBotSentence.getLikes(),allianzBotSentence.getDislikes() );
 							if (Double.compare(allianzBotNewSentence.getScore(), 0) > 0)
 								result.add(allianzBotNewSentence);
 
@@ -248,13 +254,14 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	}
 
 	private AllianzBotSentence mapToAllianzBotSentence(String id, String question, String answer, double score,
-			double hits) {
+			double likes, double dislikes) {
 		AllianzBotSentence allianzBotNewSentence = new AllianzBotSentence();
 		allianzBotNewSentence.setId(id);
 		allianzBotNewSentence.setScore(score);
 		allianzBotNewSentence.setQuestion(question);
 		allianzBotNewSentence.setAnswer(answer);
-		allianzBotNewSentence.setHits(hits);
+		allianzBotNewSentence.setLikes(likes);
+		allianzBotNewSentence.setDislikes(dislikes);
 		return allianzBotNewSentence;
 
 	}
@@ -270,7 +277,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		if (null != document) {
 			String sentence = FileUtils.removeStopWords(document.getQuestion().concat(document.getAnswer()));
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, DigestUtils.md5Hex(sentence));
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_HITS, document.getHits());
+			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, document.getLikes());
+			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_DISLIKES, document.getDislikes());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, document.getQuestion());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ANSWER, document.getAnswer());
 		}
@@ -319,8 +327,8 @@ class AllianzBotScoreAndHitsComparator implements Comparator<AllianzBotSentence>
 
 	@Override
 	public int compare(AllianzBotSentence abs1, AllianzBotSentence abs2) {
-		final double thisScore = Double.sum(abs1.getScore(), abs1.getHits());
-		final double allianzBotScore = Double.sum(abs2.getScore(), abs2.getHits());
+		final double thisScore = Double.sum(abs1.getScore(), Double.sum(abs1.getLikes(), abs1.getDislikes()));
+		final double allianzBotScore = Double.sum(abs2.getScore(), Double.sum(abs2.getLikes(), abs2.getDislikes()));
 		if (thisScore == allianzBotScore) {
 			return 0;
 		} else if (thisScore > allianzBotScore) {

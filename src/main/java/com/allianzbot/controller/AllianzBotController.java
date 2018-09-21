@@ -104,7 +104,7 @@ public class AllianzBotController {
 			@RequestParam(name = "q") @Valid String q) throws SolrServerException, IOException, AllianzBotException {
 
 		AllianzBotSolrSearchDocumentResponse allianzBotControllerResponse = botTextExtractorProcess.searchDocument(q);
-		log.debug("Inside AllianzBotController.searchSolr AllianzBotControllerResponse is {}",
+		log.info("Inside AllianzBotController.searchSolr AllianzBotControllerResponse is {}",
 				allianzBotControllerResponse);
 
 		return allianzBotControllerResponse;
@@ -147,13 +147,15 @@ public class AllianzBotController {
 		for (File file : listOfFiles) {
 			if (file.isFile()) {
 				final String fileName = file.getName();
+				log.info("Extracting content from {} started.", fileName);
 				MultipartFile multipartFile = new MockMultipartFile(fileName, fileName,
 						Files.probeContentType(file.toPath()), new FileInputStream(file));
 
 				botTextExtractorProcess.storeDocument(multipartFile);
-				log.info("All new documents are stored successfully");
+				log.info("Extracting content from {} finished.", fileName);
 			}
 		}
+		log.info("All new documents are stored successfully");
 	}
 
 }

@@ -19,33 +19,36 @@ public class AllianzBotSentence implements Serializable {
 	 */
 	private static final long serialVersionUID = 3411583878782802899L;
 
-	@NotEmpty(message="Null id not acceptable.")
+	@NotEmpty(message = "Null id not acceptable.")
 	private String id;
 
 	/**
 	 * question
 	 */
-	@NotEmpty(message="Null question not acceptable.")
+	@NotEmpty(message = "Null question not acceptable.")
 	private String question;
 
 	/**
 	 * answer
 	 */
-	@NotEmpty(message="Null answer not acceptable.")
+	@NotEmpty(message = "Null answer not acceptable.")
 	private String answer;
 
 	/**
 	 * score
 	 */
-	//@Min(value = 0L, message = "Invalid value for the score")
+	// @Min(value = 0L, message = "Invalid value for the score")
 	private double score;
 
 	/**
-	 * hits
+	 * likes
 	 */
-	//@Min(value = -1L, message = "Invalid value for the hits, atleast value -1  allowed.")
-	//@Max(value = 1L, message = "Invalid value for the hits, only atleast value 1 allowed.")
-	private double hits;
+	private double likes;
+
+	/**
+	 * dislikes
+	 */
+	private double dislikes;
 
 	public String getId() {
 		return id;
@@ -79,12 +82,20 @@ public class AllianzBotSentence implements Serializable {
 		this.score = score;
 	}
 
-	public double getHits() {
-		return hits;
+	public double getLikes() {
+		return likes;
 	}
 
-	public void setHits(double hits) {
-		this.hits = hits;
+	public void setLikes(double likes) {
+		this.likes = likes;
+	}
+
+	public double getDislikes() {
+		return dislikes;
+	}
+
+	public void setDislikes(double dislikes) {
+		this.dislikes = dislikes;
 	}
 
 	@Override
@@ -98,8 +109,10 @@ public class AllianzBotSentence implements Serializable {
 		builder.append(answer);
 		builder.append(", score=");
 		builder.append(score);
-		builder.append(", hits=");
-		builder.append(hits);
+		builder.append(", likes=");
+		builder.append(likes);
+		builder.append(", dislikes=");
+		builder.append(dislikes);
 		builder.append("]");
 		return builder.toString();
 	}

@@ -20,7 +20,9 @@ public class AllianzBotConstants {
 
 	public static final String AB_SOLR_FIELD_ID = "id";
 
-	public static final String AB_SOLR_FIELD_TOTAL_HITS = "hits";
+	public static final String AB_SOLR_FIELD_TOTAL_LIKES = "likes";
+	
+	public static final String AB_SOLR_FIELD_TOTAL_DISLIKES = "dislikes";
 
 	public static final String SOLR_FIELD_SCORE = "score";
 
