@@ -1,8 +1,6 @@
 package com.allianzbot.response;
 
-import java.util.List;
 import java.util.Set;
-
 import com.allianzbot.dto.AllianzBotResponseStatus;
 import com.allianzbot.dto.AllianzBotSentence;
 

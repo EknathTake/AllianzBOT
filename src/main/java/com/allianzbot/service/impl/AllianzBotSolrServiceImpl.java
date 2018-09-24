@@ -165,11 +165,10 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			SolrDocumentList documents) throws InvalidFormatException, IOException, AllianzBotException {
 
 		AllianzBotSolrSearchDocumentResponse allianzBotSolrServiceResponse = new AllianzBotSolrSearchDocumentResponse();
-		Set<AllianzBotSentence> finalResult = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
-		SortedMap<Double, AllianzBotSentence> result = new TreeMap<Double, AllianzBotSentence>(
-				new AllianzBotScoreAndHitsComparator1());
+		Set<AllianzBotSentence> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
 		// tokenize to query
-		List<String> tokensOfTheQuery = Stream.of(allianzBotOpenNlpService.tokenize(keywords)).map(s -> s.toLowerCase())
+		List<String> tokensOfTheQuery = Stream.of(allianzBotOpenNlpService.tokenize(keywords))
+				.map(s-> s.toLowerCase())
 				.collect(Collectors.toList());
 		for (int x = 0; x < documents.size(); x++) {
 			final List<String> listAnswers = ((List<String>) documents.get(x)
@@ -188,8 +187,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 				AllianzBotSentence mapToAllianzBotSentence = mapToAllianzBotSentence(id, listQuestions.get(0),
 						listAnswers.get(0), score, likes.get(0));
 				if (null != mapToAllianzBotSentence)
-					result.put(Double.sum(mapToAllianzBotSentence.getScore(), mapToAllianzBotSentence.getLikes()),
-							mapToAllianzBotSentence);
+					result.add(mapToAllianzBotSentence);
 			}
 
 			// log.info("-------------CONTENT------------------");
@@ -209,14 +207,13 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 							// calculating the features
 							final double features = Stream.of(tokensOfTheSentences)
-									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase())).count();
-							final double calculaterScore = calculateScore(features, tokensOfTheSentences.length);
+									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase()))
+									.count();
+							final double calculatedScore = calculateScore(features, tokensOfTheSentences.length);
 							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
-									allianzBotSentence.getAnswer(), calculaterScore, allianzBotSentence.getLikes());
+									allianzBotSentence.getAnswer(), calculatedScore, allianzBotSentence.getLikes());
 							if (null != allianzBotNewSentence)
-								result.put(
-										Double.sum(allianzBotNewSentence.getScore(), allianzBotNewSentence.getLikes()),
-										allianzBotNewSentence);
+								result.add(allianzBotNewSentence);
 						}
 					}
 				} catch (IOException e) {
@@ -228,23 +225,17 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 		}
 
-		log.info("First: {}", result);
 		// remove all the duplicate answers
-		SortedMap<String, AllianzBotSentence> newAbs = new TreeMap<String, AllianzBotSentence>(
-				new AllianzBotAnswerComparator1());
-		// newAbs.putAll(result.entrySet().stream().map(m ->
-		// m.getValue()).collect(Collectors.toSet()));
-		result.forEach((k, v) -> newAbs.put(v.getAnswer(), v));
+		Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotAnswerComparator());
+		newAbs.addAll(result);
 		result.clear();
 
 		log.info("Second: {}", newAbs);
 		// sort all the answers by the high and score
-		newAbs.forEach((k, v) -> result.put(Double.sum(v.getScore(), v.getLikes()), v));
-		finalResult.addAll(result.values());
-		log.info("Third: {}", result);
+		result.addAll(newAbs);
 		newAbs.clear();
 
-		allianzBotSolrServiceResponse.setDocuments(finalResult);
+		allianzBotSolrServiceResponse.setDocuments(result);
 		return allianzBotSolrServiceResponse;
 	}
 
