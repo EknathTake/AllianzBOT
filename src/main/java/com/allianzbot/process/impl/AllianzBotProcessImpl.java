@@ -203,7 +203,7 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 	}
 
 	@Override
-	public AllianzBotSolrSearchDocumentResponse searchDocument(@Valid @NotNull String query)
+	public AllianzBotSolrSearchDocumentResponse searchDocument(@Valid @NotNull String query, boolean isSearch)
 			throws SolrServerException, InvalidFormatException, IOException, AllianzBotException {
 		if (StringUtils.isNotEmpty(query)) {
 			// get all the lemmas for user query
@@ -221,7 +221,7 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 			TreeSet<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
 			list.removeIf(s -> !seen.add(s));
 			query = FileUtils.removeStopWords(String.join(" ", list));
-			return allianzBotSolrService.searchDocuments(query);
+			return allianzBotSolrService.searchDocuments(query, isSearch);
 		} else {
 			throw new AllianzBotException(HttpStatus.BAD_REQUEST.value(), "Please enter your question.");
 		}
@@ -230,8 +230,22 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 	@Override
 	public AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSentence document)
 			throws SolrServerException, IOException, AllianzBotException {
-
-		allianzBotSolrService.updateScore(document);
+		
+		//get the all the documents with the same answer to update the likes
+		List<AllianzBotSentence> duplicateAnswers = searchDocument(document.getQuestion(), false)
+														.getDocuments()
+														.parallelStream()
+														.filter(statement -> statement.getAnswer()
+																.equalsIgnoreCase(document.getAnswer()))
+														.map(statement -> {
+															statement.setLikes(document.getLikes());
+															return statement ;
+														})
+														.collect(Collectors.toList());
+		
+		for (AllianzBotSentence allianzBotSentence : duplicateAnswers) {
+			allianzBotSolrService.updateScore(allianzBotSentence);
+		}
 
 		AllianzBotDocument allianzBotDocument = new AllianzBotDocument();
 		allianzBotDocument.setContent(document);

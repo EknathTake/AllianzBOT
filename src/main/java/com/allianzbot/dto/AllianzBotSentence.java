@@ -45,11 +45,6 @@ public class AllianzBotSentence implements Serializable {
 	 */
 	private double likes;
 
-	/**
-	 * dislikes
-	 */
-	//private double dislikes;
-
 	public String getId() {
 		return id;
 	}

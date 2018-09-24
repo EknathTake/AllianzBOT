@@ -38,7 +38,7 @@ public interface IAllianzBotProcess {
 	 * @param query
 	 * @return {@link AllianzBotSolrSearchDocumentResponse}
 	 */
-	AllianzBotSolrSearchDocumentResponse searchDocument(String query)
+	AllianzBotSolrSearchDocumentResponse searchDocument(String query, boolean isSearch)
 			throws SolrServerException, IOException, AllianzBotException;
 	
 	/**

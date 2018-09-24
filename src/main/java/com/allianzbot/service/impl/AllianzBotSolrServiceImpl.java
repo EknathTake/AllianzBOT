@@ -108,7 +108,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	}
 
 	@Override
-	public AllianzBotSolrSearchDocumentResponse searchDocuments(String query)
+	public AllianzBotSolrSearchDocumentResponse searchDocuments(String query, boolean isSearch)
 			throws SolrServerException, IOException, AllianzBotException {
 
 		// prepare for query and keywords
@@ -124,7 +124,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		log.info("Solr Query:{}", solrQuery);
 		SolrDocumentList documents = client.query(solrQuery).getResults();
 
-		return mapToAllianzBotSolrSearchDocumentResponse(query, documents);
+		return prepareForAllianzBotSolrSearchDocumentResponse(query, documents, isSearch);
 	}
 
 	/**
@@ -161,8 +161,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	 * @throws IOException
 	 * @throws AllianzBotException
 	 */
-	private AllianzBotSolrSearchDocumentResponse mapToAllianzBotSolrSearchDocumentResponse(final String keywords,
-			SolrDocumentList documents) throws InvalidFormatException, IOException, AllianzBotException {
+	private AllianzBotSolrSearchDocumentResponse prepareForAllianzBotSolrSearchDocumentResponse(final String keywords,
+			SolrDocumentList documents, boolean isSearch) throws InvalidFormatException, IOException, AllianzBotException {
 
 		AllianzBotSolrSearchDocumentResponse allianzBotSolrServiceResponse = new AllianzBotSolrSearchDocumentResponse();
 		Set<AllianzBotSentence> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
@@ -210,7 +210,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase()))
 									.count();
 							final double calculatedScore = calculateScore(features, tokensOfTheSentences.length);
-							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
+							final String newId = DigestUtils.md5Hex(keywords.concat(allianzBotSentence.getAnswer()));
+							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(newId, keywords,
 									allianzBotSentence.getAnswer(), calculatedScore, allianzBotSentence.getLikes());
 							if (null != allianzBotNewSentence)
 								result.add(allianzBotNewSentence);
@@ -226,14 +227,16 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		}
 
 		// remove all the duplicate answers
-		Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotAnswerComparator());
-		newAbs.addAll(result);
-		result.clear();
-
-		log.info("Second: {}", newAbs);
-		// sort all the answers by the high and score
-		result.addAll(newAbs);
-		newAbs.clear();
+		if(isSearch) {
+			Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotAnswerComparator());
+			newAbs.addAll(result);
+			result.clear();
+	
+			log.info("Second: {}", newAbs);
+			// sort all the answers by the high and score
+			result.addAll(newAbs);
+			newAbs.clear();
+		}
 
 		allianzBotSolrServiceResponse.setDocuments(result);
 		return allianzBotSolrServiceResponse;
@@ -263,8 +266,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 		SolrInputDocument solrInputDocument = new SolrInputDocument();
 		if (null != document) {
-			String sentence = FileUtils.removeStopWords(document.getQuestion().concat(document.getAnswer()));
-			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, DigestUtils.md5Hex(sentence));
+			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, document.getId());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, document.getLikes());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, document.getQuestion());
 			solrInputDocument.addField(AllianzBotConstants.AB_SOLR_FIELD_ANSWER, document.getAnswer());

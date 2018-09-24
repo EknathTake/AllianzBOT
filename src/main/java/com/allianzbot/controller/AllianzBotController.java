@@ -45,7 +45,7 @@ import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
  *
  */
 @Controller
-@Validated
+@CrossOrigin(origins = { "*" })
 public class AllianzBotController {
 
 	@Inject
@@ -60,7 +60,6 @@ public class AllianzBotController {
 	/**
 	 * Simply selects the home view to render by returning its name.
 	 */
-	@CrossOrigin(origins = { "*" })
 	@GetMapping(value = "/")
 	public String home(Model model) {
 		log.info("Welcome home!");
@@ -74,7 +73,6 @@ public class AllianzBotController {
 	 * @throws SolrServerException
 	 * @throws AllianzBotException
 	 */
-	@CrossOrigin(origins = { "*" })
 	@PostMapping(value = "/extract/document")
 	public ModelAndView storeSolrDocuments()
 			throws IOException, SAXException, TikaException, SolrServerException, AllianzBotException {
@@ -82,8 +80,6 @@ public class AllianzBotController {
 		batchJobToStoreFiles();
 		ModelAndView modelAndView = new ModelAndView("home");
 		modelAndView.addObject("message", "All Documents stored. Successfully");
-		// AllianzBotSolrCreateDocumentResponse storeDocument =
-		// botTextExtractorProcess.storeDocument(file);
 		return modelAndView;
 
 	}
@@ -98,16 +94,11 @@ public class AllianzBotController {
 	 * @throws AllianzBotException
 	 */
 
-	@CrossOrigin(origins = { "*" })
 	@GetMapping(value = "/search/document")
 	public @ResponseBody AllianzBotSolrSearchDocumentResponse searchSolrDocument(
 			@RequestParam(name = "q") @Valid String q) throws SolrServerException, IOException, AllianzBotException {
 
-		AllianzBotSolrSearchDocumentResponse allianzBotControllerResponse = botTextExtractorProcess.searchDocument(q);
-		log.info("Inside AllianzBotController.searchSolr AllianzBotControllerResponse is {}",
-				allianzBotControllerResponse);
-
-		return allianzBotControllerResponse;
+		return botTextExtractorProcess.searchDocument(q, true);
 	}
 
 	/**
@@ -115,30 +106,25 @@ public class AllianzBotController {
 	 * 
 	 * @return 404 Resource not found error
 	 */
-	@CrossOrigin(origins = { "*" })
 	@GetMapping(value = "*")
 	@ResponseStatus(HttpStatus.NOT_FOUND)
 	public String handleResourceNotFoundException() {
 		return "404";
 	}
 
-	@CrossOrigin(origins = { "*" })
 	@PutMapping(value = "/update/document")
 	public ResponseEntity<AllianzBotSolrCreateDocumentResponse> updateSolrDocument(
 			@RequestBody @Valid AllianzBotSentence document, BindingResult bindingResult)
 			throws SolrServerException, IOException, AllianzBotException, SAXException, TikaException {
 
-		log.info("Inside AllianzBotController.updateSolrDocument Document is :{}", document);
+		log.debug("AllianzBotController.updateSolrDocument Started Document is :{}", document);
 
 		if (bindingResult.hasErrors()) {
 			log.info("Inside AllianzBotController.updateSolrDocument validation fail");
 			throw new AllianzBotException(400, bindingResult.getAllErrors().toString());
 		}
-		AllianzBotSolrCreateDocumentResponse allianzBotControllerResponse = botTextExtractorProcess
-				.updateScore(document);
-		log.debug("Inside AllianzBotController.updateSolrDocument AllianzBotSolrCreateDocumentResponse is {}",
-				allianzBotControllerResponse);
-		return new ResponseEntity<>(allianzBotControllerResponse, HttpStatus.OK);
+		log.debug("AllianzBotController.updateSolrDocument Finished");
+		return new ResponseEntity<>(botTextExtractorProcess.updateScore(document), HttpStatus.OK);
 	}
 
 	public void batchJobToStoreFiles() throws FileNotFoundException, IOException, SAXException, TikaException,
