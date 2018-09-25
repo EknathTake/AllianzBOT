@@ -5,9 +5,7 @@ import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
@@ -44,7 +42,6 @@ import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 import com.allianzbot.service.interfaces.IAllianzBotSolrService;
 import com.allianzbot.service.interfaces.IAllianzBotTextExtractorService;
 import com.allianzbot.service.interfaces.IAllianzBotTokenizerService;
-import com.allianzbot.utils.AllianzBotConstants;
 import com.allianzbot.utils.AllianzBotContentTypes;
 import com.allianzbot.utils.FileUtils;
 
