@@ -11,6 +11,8 @@ import java.util.Map;
 import java.util.Objects;
 import java.util.Set;
 import java.util.TreeSet;
+import java.util.function.Function;
+import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -232,15 +234,18 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 			throws SolrServerException, IOException, AllianzBotException {
 		
 		//get the all the documents with the same answer to update the likes
+		Function<? super AllianzBotSentence, ? extends AllianzBotSentence> functionLikes = statement -> {
+					statement.setLikes(document.getLikes());
+					return statement ;
+				};
+		Predicate<? super AllianzBotSentence> predicateAnswer = statement -> statement.getAnswer()
+				.equalsIgnoreCase(document.getAnswer());
+		
 		List<AllianzBotSentence> duplicateAnswers = searchDocument(document.getQuestion(), false)
 														.getDocuments()
 														.parallelStream()
-														.filter(statement -> statement.getAnswer()
-																.equalsIgnoreCase(document.getAnswer()))
-														.map(statement -> {
-															statement.setLikes(document.getLikes());
-															return statement ;
-														})
+														.filter(predicateAnswer)
+														.map(functionLikes)
 														.collect(Collectors.toList());
 		
 		for (AllianzBotSentence allianzBotSentence : duplicateAnswers) {
