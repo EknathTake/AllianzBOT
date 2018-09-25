@@ -81,13 +81,37 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			int i = 0;
 			for (Map.Entry<Integer, List<String>> entry : document.entrySet()) {
 				List<String> columns = entry.getValue();
-				if (columns.size() == 2 && CollectionUtils.isNotEmpty(columns)) {
-					doc = new SolrInputDocument();
-					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, new Double(0.0));
-					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ID,
-							DigestUtils.md5Hex(columns.get(0) + columns.get(1)));
-					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, columns.get(0));
-					doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ANSWER, columns.get(1));
+
+				if (CollectionUtils.isNotEmpty(columns)) {
+					if (columns.size() == 2) {
+						doc = new SolrInputDocument();
+						doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, new Double(0.0));
+						doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ID,
+								DigestUtils.md5Hex(columns.get(0) + columns.get(1)));
+						doc.addField(AllianzBotConstants.AB_SOLR_FIELD_QUESTION, columns.get(0));
+						doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ANSWER, columns.get(1));
+
+					} else if (columns.size() == 16) {
+						doc = new SolrInputDocument();
+						doc.addField(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES, new Double(0.0));
+						doc.addField(AllianzBotConstants.AB_SOLR_FIELD_ID, DigestUtils.md5Hex(columns.get(5)));
+						doc.addField(AllianzBotConstants.TEAM, columns.get(0));
+						doc.addField(AllianzBotConstants.TEST_CASE_ID, columns.get(1));
+						doc.addField(AllianzBotConstants.AUTO_STATUS, columns.get(2));
+						doc.addField(AllianzBotConstants.REQUIREMENTS_ID, columns.get(3));
+						doc.addField(AllianzBotConstants.riskClass, columns.get(4));
+						doc.addField(AllianzBotConstants.testSetId, columns.get(5));
+						doc.addField(AllianzBotConstants.testLabPath, columns.get(6));
+						doc.addField(AllianzBotConstants.executionDate, columns.get(7));
+						doc.addField(AllianzBotConstants.executionStatus, columns.get(8));
+						doc.addField(AllianzBotConstants.failedRunCount, columns.get(9));
+						doc.addField(AllianzBotConstants.defectIdStr, columns.get(10));
+						doc.addField(AllianzBotConstants.AB_FAILED_STEP, columns.get(11));
+						doc.addField(AllianzBotConstants.AB_FAILED_LOG, columns.get(12));
+						doc.addField(AllianzBotConstants.screenShotPath, columns.get(13));
+						doc.addField(AllianzBotConstants.AB_FAILURE_CATEGORY, columns.get(14));
+						doc.addField(AllianzBotConstants.defectId, columns.get(15));
+					}
 
 					client.add(doc);
 					if (i % 100 == 0)
@@ -119,7 +143,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		solrQuery.setQuery(solrSearchQuery).setStart(0).setRows(AllianzBotConstants.AB_MAX_ROWS).setFields(
 				AllianzBotConstants.AB_SOLR_FIELD_ID, AllianzBotConstants.AB_SOLR_FIELD_CONTENT,
 				AllianzBotConstants.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.AB_SOLR_FIELD_ANSWER,
-				AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES);
+				AllianzBotConstants.SOLR_FIELD_SCORE, AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES,
+				AllianzBotConstants.AB_FAILURE_CATEGORY, AllianzBotConstants.AB_FAILED_LOG);
 
 		log.info("Solr Query:{}", solrQuery);
 		SolrDocumentList documents = client.query(solrQuery).getResults();
@@ -144,7 +169,11 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			queryBuilder.append(AllianzBotConstants.AB_SOLR_FIELD_CONTENT).append(AllianzBotConstants.AB_COLON)
 					.append(query).append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
 					.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_SOLR_FIELD_QUESTION)
-					.append(AllianzBotConstants.AB_COLON).append(query);
+					.append(AllianzBotConstants.AB_COLON).append(query)
+					.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
+					.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_FAILED_LOG)
+					.append(AllianzBotConstants.AB_COLON).append(AllianzBotConstants.AB_STAR).append(query)
+					.append(AllianzBotConstants.AB_STAR);
 			return queryBuilder.toString();
 
 		} else
@@ -162,26 +191,27 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 	 * @throws AllianzBotException
 	 */
 	private AllianzBotSolrSearchDocumentResponse prepareForAllianzBotSolrSearchDocumentResponse(final String keywords,
-			SolrDocumentList documents, boolean isSearch) throws InvalidFormatException, IOException, AllianzBotException {
+			SolrDocumentList documents, boolean isSearch)
+			throws InvalidFormatException, IOException, AllianzBotException {
 
 		AllianzBotSolrSearchDocumentResponse allianzBotSolrServiceResponse = new AllianzBotSolrSearchDocumentResponse();
 		Set<AllianzBotSentence> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
 		// tokenize to query
-		List<String> tokensOfTheQuery = Stream.of(allianzBotOpenNlpService.tokenize(keywords))
-				.map(s-> s.toLowerCase())
+		List<String> tokensOfTheQuery = Stream.of(allianzBotOpenNlpService.tokenize(keywords)).map(s -> s.toLowerCase())
 				.collect(Collectors.toList());
 		for (int x = 0; x < documents.size(); x++) {
-			final List<String> listAnswers = ((List<String>) documents.get(x)
-					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ANSWER));
-			final List<String> listQuestions = ((List<String>) documents.get(x)
-					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_QUESTION));
+			
 			final String id = documents.get(x).getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ID).toString();
 			final List<Double> likes = ((List<Double>) documents.get(x)
 					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_TOTAL_LIKES));
 			final Double score = new Double(
 					documents.get(x).getFieldValue(AllianzBotConstants.SOLR_FIELD_SCORE).toString());
 
-			// log.info("-------------ANSWER------------------");
+			// log.info("-------------QUESTION ANSWER------------------");
+			final List<String> listAnswers = ((List<String>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_ANSWER));
+			final List<String> listQuestions = ((List<String>) documents.get(x)
+					.getFieldValue(AllianzBotConstants.AB_SOLR_FIELD_QUESTION));
 			if (CollectionUtils.isNotEmpty(listAnswers) && CollectionUtils.isNotEmpty(listQuestions)
 					&& CollectionUtils.isNotEmpty(likes)) {
 				AllianzBotSentence mapToAllianzBotSentence = mapToAllianzBotSentence(id, listQuestions.get(0),
@@ -190,16 +220,13 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 					result.add(mapToAllianzBotSentence);
 			}
 
-			// log.info("-------------CONTENT------------------");
+			// log.info("-------------PLAIN CONTENT------------------");
 			@SuppressWarnings("unchecked")
 			List<String> contents = (List<String>) documents.get(x).get(AllianzBotConstants.AB_SOLR_FIELD_CONTENT);
 			if (CollectionUtils.isNotEmpty(contents)) {
 				String content = contents.get(0);
 				try {
-					// all the sentences
 					List<AllianzBotSentence> sentences = allianzBotOpenNlpService.sentenceDetect(content);
-
-					// Iterate through all the sentences
 					for (AllianzBotSentence allianzBotSentence : sentences) {
 						if (null != allianzBotSentence) {
 							String[] tokensOfTheSentences = allianzBotOpenNlpService
@@ -207,8 +234,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 							// calculating the features
 							final double features = Stream.of(tokensOfTheSentences)
-									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase()))
-									.count();
+									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase())).count();
 							final double calculatedScore = calculateScore(features, tokensOfTheSentences.length);
 							final String newId = DigestUtils.md5Hex(keywords.concat(allianzBotSentence.getAnswer()));
 							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(newId, keywords,
@@ -223,15 +249,25 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 					throw new AllianzBotRunTimeException(000, e.getMessage());
 				}
 			}
+			
+			// log.info("-------------TEST DATA------------------");
+			@SuppressWarnings("unchecked")
+			List<String> failureCategories = (List<String>) documents.get(x).get(AllianzBotConstants.AB_FAILURE_CATEGORY);
+			if (CollectionUtils.isNotEmpty(failureCategories)) {
+				AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
+						failureCategories.get(0), score, likes.get(0));
+				if (null != allianzBotNewSentence)
+					result.add(allianzBotNewSentence);
+			}
 
 		}
 
 		// remove all the duplicate answers
-		if(isSearch) {
+		if (isSearch) {
 			Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotAnswerComparator());
 			newAbs.addAll(result);
 			result.clear();
-	
+
 			log.info("Second: {}", newAbs);
 			// sort all the answers by the high and score
 			result.addAll(newAbs);
