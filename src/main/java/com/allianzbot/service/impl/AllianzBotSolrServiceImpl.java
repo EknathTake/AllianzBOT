@@ -362,37 +362,3 @@ class AllianzBotScoreAndHitsComparator implements Comparator<AllianzBotSentence>
 		return 1;
 	}
 }
-
-/**
- * Comparator to compare AllianzBotSentence by answer+score of the document.\
- * 
- * @author eknath.take
- *
- */
-class AllianzBotScoreAndHitsComparator1 implements Comparator<Double> {
-
-	@Override
-	public int compare(Double abs1, Double abs2) {
-		if (abs1 == abs2) {
-			return 0;
-		} else if (abs1 > abs2) {
-			return -1;
-		}
-		return 1;
-	}
-}
-
-/**
- * Comparator to compare AllianzBotSentence by answer. This will removes the
- * duplicate answers as well.
- * 
- * @author eknath.take
- *
- */
-class AllianzBotAnswerComparator1 implements Comparator<String> {
-
-	@Override
-	public int compare(String abs1, String abs2) {
-		return abs1.compareTo(abs2);
-	}
-}
