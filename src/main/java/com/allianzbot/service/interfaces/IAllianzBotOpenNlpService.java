@@ -3,8 +3,8 @@ package com.allianzbot.service.interfaces;
 import java.io.IOException;
 import java.util.List;
 
-import com.allianzbot.dto.AllianzBotSentence;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotSentence;
 
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.util.InvalidFormatException;

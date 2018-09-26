@@ -31,10 +31,10 @@ import org.springframework.stereotype.Component;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXException;
 
-import com.allianzbot.dto.AllianzBotDocument;
-import com.allianzbot.dto.AllianzBotResponseStatus;
-import com.allianzbot.dto.AllianzBotSentence;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotResponseStatus;
+import com.allianzbot.model.AllianzBotSentence;
 import com.allianzbot.process.interfaces.IAllianzBotProcess;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
@@ -216,10 +216,11 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 							.collect(Collectors.joining(" "));
 
 			// removing duplicates keywords from the query...
-			List<String> list = new ArrayList<>(Arrays.asList(query.split("\\s")));
+			//List<String> list = new ArrayList<>(Arrays.asList(query.split("\\s")));
 			TreeSet<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-			list.removeIf(s -> !seen.add(s));
-			query = FileUtils.removeStopWords(String.join(" ", list));
+			//list.removeIf(s -> !seen.add(s));
+			seen.addAll(Arrays.asList(query.split("\\s")));
+			query = FileUtils.removeStopWords(String.join(" ", seen));
 			return allianzBotSolrService.searchDocuments(query, isSearch);
 		} else {
 			throw new AllianzBotException(HttpStatus.BAD_REQUEST.value(), "Please enter your question.");

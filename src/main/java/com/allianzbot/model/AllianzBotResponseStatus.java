@@ -1,4 +1,4 @@
-package com.allianzbot.dto;
+package com.allianzbot.model;
 
 import java.text.ParseException;
 import java.text.SimpleDateFormat;

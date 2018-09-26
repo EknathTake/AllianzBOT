@@ -6,9 +6,9 @@ import java.util.Map;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 
-import com.allianzbot.dto.AllianzBotDocument;
-import com.allianzbot.dto.AllianzBotSentence;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotSentence;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 
 /**

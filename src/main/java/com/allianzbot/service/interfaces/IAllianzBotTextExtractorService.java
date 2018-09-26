@@ -6,8 +6,8 @@ import java.io.InputStream;
 import org.apache.tika.exception.TikaException;
 import org.xml.sax.SAXException;
 
-import com.allianzbot.dto.AllianzBotDocument;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
 
 /**
  * Each method extracts the contents from different document. see the javadocs

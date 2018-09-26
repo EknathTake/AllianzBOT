@@ -9,8 +9,8 @@ import org.apache.tika.exception.TikaException;
 import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXException;
 
-import com.allianzbot.dto.AllianzBotSentence;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotSentence;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 

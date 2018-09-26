@@ -16,8 +16,8 @@ import org.springframework.web.bind.annotation.ControllerAdvice;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.xml.sax.SAXException;
 
-import com.allianzbot.dto.AllianzBotResponseStatus;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotResponseStatus;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 
 /**

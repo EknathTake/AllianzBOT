@@ -29,8 +29,8 @@ import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
 import com.allianzbot.controller.AllianzBotController;
-import com.allianzbot.dto.AllianzBotDocument;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 import com.allianzbot.service.interfaces.IAllianzBotTextExtractorService;
 

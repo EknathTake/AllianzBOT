@@ -11,8 +11,8 @@ import org.junit.Ignore;
 import org.junit.Test;
 import org.xml.sax.SAXException;
 
-import com.allianzbot.dto.AllianzBotDocument;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.service.impl.AllianzBotTextExtractorServiceImpl;
 import com.allianzbot.service.interfaces.IAllianzBotTextExtractorService;
 

@@ -13,8 +13,8 @@ import org.springframework.test.context.junit.jupiter.web.SpringJUnitWebConfig;
 import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
-import com.allianzbot.dto.AllianzBotSentence;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotSentence;
 import com.allianzbot.service.impl.AllianzBotOpenNlpServiceImpl;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 

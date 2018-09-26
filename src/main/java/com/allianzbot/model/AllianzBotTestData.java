@@ -1,4 +1,4 @@
-package com.allianzbot.dto;
+package com.allianzbot.model;
 
 public class AllianzBotTestData {
 

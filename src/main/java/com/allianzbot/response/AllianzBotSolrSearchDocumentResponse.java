@@ -1,8 +1,9 @@
 package com.allianzbot.response;
 
 import java.util.Set;
-import com.allianzbot.dto.AllianzBotResponseStatus;
-import com.allianzbot.dto.AllianzBotSentence;
+
+import com.allianzbot.model.AllianzBotResponseStatus;
+import com.allianzbot.model.AllianzBotSentence;
 
 /**
  * Response object for AllianzBot. It will contains the extracted content of the

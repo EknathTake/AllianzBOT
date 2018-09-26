@@ -1,4 +1,4 @@
-package com.allianzbot.dto;
+package com.allianzbot.model;
 
 /**
  * Response object for AllianzBot for peocess layer. It will contains the

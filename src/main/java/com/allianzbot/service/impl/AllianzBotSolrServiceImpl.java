@@ -34,10 +34,10 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
-import com.allianzbot.dto.AllianzBotDocument;
-import com.allianzbot.dto.AllianzBotSentence;
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.exception.AllianzBotRunTimeException;
+import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotSentence;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 import com.allianzbot.service.interfaces.IAllianzBotSolrService;

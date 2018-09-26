@@ -4,9 +4,9 @@ import java.io.Serializable;
 
 import org.apache.solr.client.solrj.beans.Field;
 
-import com.allianzbot.dto.AllianzBotDocument;
-import com.allianzbot.dto.AllianzBotResponseStatus;
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotResponseStatus;
 
 /**
  * Response object for AllianzBot for peocess layer. It will contains the
