@@ -26,8 +26,9 @@ public interface IAllianzBotSolrService {
 	 * @return {@link UpdateResponse}
 	 * @throws SolrServerException
 	 * @throws IOException
+	 * @throws AllianzBotException 
 	 */
-	UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse) throws SolrServerException, IOException;
+	UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse) throws SolrServerException, IOException, AllianzBotException;
 
 	/**
 	 * Search the user keyuword in Solr server.

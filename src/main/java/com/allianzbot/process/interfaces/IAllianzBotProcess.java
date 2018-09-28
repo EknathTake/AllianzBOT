@@ -10,6 +10,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.model.AllianzBotSentence;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
@@ -40,13 +41,26 @@ public interface IAllianzBotProcess {
 	 */
 	AllianzBotSolrSearchDocumentResponse searchDocument(String query, boolean isSearch)
 			throws SolrServerException, IOException, AllianzBotException;
-	
+
 	/**
 	 * Update the the score for the specific document.
 	 * 
 	 * @param document
-	 * @return 
+	 * @return
 	 */
-	AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSentence document) throws SolrServerException, IOException, AllianzBotException;
+	AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSentence document)
+			throws SolrServerException, IOException, AllianzBotException;
+
+	/**
+	 * extract content from multiple documents
+	 * 
+	 * @param file
+	 * @return
+	 * @throws AllianzBotException 
+	 * @throws TikaException 
+	 * @throws SAXException 
+	 * @throws IOException 
+	 */
+	AllianzBotDocument extractContent(MultipartFile file) throws IOException, SAXException, TikaException, AllianzBotException;
 
 }

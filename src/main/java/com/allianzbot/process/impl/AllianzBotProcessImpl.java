@@ -96,7 +96,8 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 	 * @throws SAXException
 	 * @throws TikaException
 	 */
-	private AllianzBotDocument extractContent(MultipartFile file)
+	@Override
+	public AllianzBotDocument extractContent(MultipartFile file)
 			throws IOException, SAXException, TikaException, AllianzBotException {
 
 		final InputStream inputstream = file.getInputStream();
@@ -207,18 +208,15 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 		if (StringUtils.isNotEmpty(query)) {
 			// get all the lemmas for user query
 			query = query + " "
-					+ Stream.of(allianzBotOpenNlpService.lemmatization(query))
-							.filter(Objects::nonNull)
+					+ Stream.of(allianzBotOpenNlpService.lemmatization(query)).filter(Objects::nonNull)
 							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "O"))
-							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "be"))
-							.distinct()
-							.map(lemma -> lemma)
+							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "be")).distinct().map(lemma -> lemma)
 							.collect(Collectors.joining(" "));
 
 			// removing duplicates keywords from the query...
-			//List<String> list = new ArrayList<>(Arrays.asList(query.split("\\s")));
+			// List<String> list = new ArrayList<>(Arrays.asList(query.split("\\s")));
 			TreeSet<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-			//list.removeIf(s -> !seen.add(s));
+			// list.removeIf(s -> !seen.add(s));
 			seen.addAll(Arrays.asList(query.split("\\s")));
 			query = FileUtils.removeStopWords(String.join(" ", seen));
 			return allianzBotSolrService.searchDocuments(query, isSearch);
@@ -230,22 +228,18 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 	@Override
 	public AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSentence document)
 			throws SolrServerException, IOException, AllianzBotException {
-		
-		//get the all the documents with the same answer to update the likes
+
+		// get the all the documents with the same answer to update the likes
 		Function<? super AllianzBotSentence, ? extends AllianzBotSentence> functionLikes = statement -> {
-					statement.setLikes(document.getLikes());
-					return statement ;
-				};
+			statement.setLikes(document.getLikes());
+			return statement;
+		};
 		Predicate<? super AllianzBotSentence> predicateAnswer = statement -> statement.getAnswer()
 				.equalsIgnoreCase(document.getAnswer());
-		
-		List<AllianzBotSentence> duplicateAnswers = searchDocument(document.getQuestion(), false)
-														.getDocuments()
-														.parallelStream()
-														.filter(predicateAnswer)
-														.map(functionLikes)
-														.collect(Collectors.toList());
-		
+
+		List<AllianzBotSentence> duplicateAnswers = searchDocument(document.getQuestion(), false).getDocuments()
+				.parallelStream().filter(predicateAnswer).map(functionLikes).collect(Collectors.toList());
+
 		for (AllianzBotSentence allianzBotSentence : duplicateAnswers) {
 			allianzBotSolrService.updateScore(allianzBotSentence);
 		}
@@ -253,9 +247,11 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 		AllianzBotDocument allianzBotDocument = new AllianzBotDocument();
 		allianzBotDocument.setContent(document);
 		allianzBotDocument.setId(document.getId());
-		AllianzBotSolrCreateDocumentResponse mapServiceToProcessResponse = mapServiceToProcessResponse(allianzBotDocument, null );
-		AllianzBotResponseStatus status = new AllianzBotResponseStatus(new Date(), 200, "Document updated successfully");
-		mapServiceToProcessResponse.setStatus(status );
+		AllianzBotSolrCreateDocumentResponse mapServiceToProcessResponse = mapServiceToProcessResponse(
+				allianzBotDocument, null);
+		AllianzBotResponseStatus status = new AllianzBotResponseStatus(new Date(), 200,
+				"Document updated successfully");
+		mapServiceToProcessResponse.setStatus(status);
 		return mapServiceToProcessResponse;
 	}
 

@@ -12,6 +12,12 @@
 		    <input type="submit" value="Load Documents">
 		</form>
 	</div> 
+	
+	<div>
+		<form method="GET" action='<c:url value="/assesment/question"></c:url>' enctype="multipart/form-data">
+		    <input type="submit" value="Load Assesment">
+		</form>
+	</div> 
 	${message}
 	<hr>
 	<form action='<c:url value="/search/document"></c:url>'>
