@@ -59,32 +59,19 @@ public class AllianzBotAssesmentController {
 	@Named("fileUtils")
 	private FileUtils fileUtils;
 
+	/**
+	 * Load the Assesment related questions related to topic.
+	 * 
+	 * @param topic
+	 * @return
+	 * @throws SolrServerException
+	 * @throws IOException
+	 */
 	@GetMapping(value = "/assesment/questions")
-	public @ResponseBody List<AllianzBotAssesmentQuestion> loadAssessment(@RequestParam(name = "topic") String topic) {
+	public @ResponseBody List<AllianzBotAssesmentQuestion> loadAssessment(@RequestParam(name = "topic") String topic)
+			throws SolrServerException, IOException {
 		log.info("Inside AllianzBotAssesmentController.loadAssessment() topic is {}", topic);
-
-		AllianzBotAssesmentQuestion q1 = new AllianzBotAssesmentQuestion();
-		q1.setQuestionId(1);
-		q1.setQuestion("Question 1?");
-		q1.setObjectives(new String[] { "ob1", "ob2", "ob3", "ob4" });
-		q1.setIsMultiAnswer(false);
-
-		AllianzBotAssesmentQuestion q2 = new AllianzBotAssesmentQuestion();
-		q2.setQuestionId(2);
-		q2.setQuestion("Question 2?");
-		q2.setObjectives(new String[] { "ob1", "ob2", "ob3", "ob4" });
-		q2.setIsMultiAnswer(true);
-
-		AllianzBotAssesmentQuestion q3 = new AllianzBotAssesmentQuestion();
-		q3.setQuestionId(3);
-		q3.setQuestion("Question 3?");
-		q3.setObjectives(new String[] { "ob1", "ob2", "ob3", "ob4" });
-		q3.setIsMultiAnswer(false);
-
-		List<AllianzBotAssesmentQuestion> questions = Arrays.asList(q1, q2, q3);
-		// AllianzBotQuestions allianzBotQuestions = new AllianzBotQuestions();
-		// allianzBotQuestions.setAllianzBotQuestions(questions);
-		return questions;
+		return allianzBotAssesmentProcess.loadAssesmentQuestions(new String[] { topic });
 	}
 
 	/**
@@ -98,24 +85,24 @@ public class AllianzBotAssesmentController {
 	 * @throws TikaException
 	 * @throws SAXException
 	 */
-	@GetMapping(value = "/assesment/question")
+	@PostMapping(value = "/assesment/questions")
 	public @ResponseBody AllianzBotSolrCreateDocumentResponse saveAssesment() throws FileNotFoundException, IOException,
 			SAXException, TikaException, AllianzBotException, SolrServerException {
 		log.info("Inside AllianzBotAssesmentController.saveQuestions()");
 		MultipartFile[] multipartFiles = fileUtils.storeDocumentFromDir(documents);
-		if ( multipartFiles.length > 0) {
+		if (multipartFiles.length > 0) {
 			for (MultipartFile multipartFile : multipartFiles) {
 				allianzBotAssesmentProcess.storeAssesment(multipartFile);
 			}
-		}else
+		} else
 			throw new AllianzBotException(000, "Loading Assesment failed.");
-		
+
 		AllianzBotSolrCreateDocumentResponse response = new AllianzBotSolrCreateDocumentResponse();
 		AllianzBotResponseStatus status = new AllianzBotResponseStatus();
 		status.setStatusCode(200);
 		status.setMessage("Assesment Stored successfully");
 		status.setTimestamp(new Date());
-		response.setStatus(status );
+		response.setStatus(status);
 		return response;
 
 	}
@@ -126,9 +113,11 @@ public class AllianzBotAssesmentController {
 	 * @param allianzBotQuestion
 	 */
 	@PostMapping(value = "/assesment/answer")
-	public void storeUserChoiceAnswers(@RequestBody AllianzBotAssesmentQuestion allianzBotQuestion, HttpSession session) {
+	public void storeUserChoiceAnswers(@RequestBody AllianzBotAssesmentQuestion allianzBotQuestion,
+			HttpSession session) {
 		log.info("Inside AllianzBotAssesmentController.saveQuestionsAnswer");
-		AllianzBotAssesmentQuestions assesmentQuestions = (AllianzBotAssesmentQuestions) session.getAttribute("assesmentQuestions");
+		AllianzBotAssesmentQuestions assesmentQuestions = (AllianzBotAssesmentQuestions) session
+				.getAttribute("assesmentQuestions");
 		log.info("Inside AllianzBotAssesmentController.saveQuestionsAnswer before update AllianzBotQuestions :{}",
 				assesmentQuestions);
 		if (null != assesmentQuestions) {

@@ -1,8 +1,6 @@
 package com.allianzbot.service.interfaces;
 
 import java.io.IOException;
-import java.util.Map;
-
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 
@@ -32,6 +30,7 @@ public interface IAllianzBotSolrService {
 
 	/**
 	 * Search the user keyuword in Solr server.
+	 * @param solrQuery 
 	 * 
 	 * @param keywords
 	 * @return SolrDocumentList

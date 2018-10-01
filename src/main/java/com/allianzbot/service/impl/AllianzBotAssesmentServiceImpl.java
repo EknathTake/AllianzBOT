@@ -1,19 +1,24 @@
 package com.allianzbot.service.impl;
 
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
+import org.apache.commons.lang3.ArrayUtils;
 import org.apache.solr.client.solrj.SolrClient;
+import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.impl.HttpSolrClient;
 import org.apache.solr.client.solrj.response.UpdateResponse;
+import org.apache.solr.common.SolrDocumentList;
 import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.service.interfaces.IAllianzBotAssesmentService;
 import com.allianzbot.utils.AllianzBotConstants;
@@ -36,11 +42,6 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 	private SolrClient client;
 
 	@Override
-	public void loadAssesmentIntoSolr() {
-
-	}
-
-	@Override
 	public UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse)
 			throws AllianzBotException, SolrServerException, IOException {
 		SolrInputDocument doc = null;
@@ -54,8 +55,8 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 			int i = 0;
 			for (Map.Entry<Integer, List<String>> entry : document.entrySet()) {
 				List<String> columns = entry.getValue();
-			
-				if (CollectionUtils.isNotEmpty(columns) && i>0) {
+
+				if (CollectionUtils.isNotEmpty(columns) && i > 0) {
 					if (columns.size() == 3) {
 						/** for asssment answers */
 						doc = new SolrInputDocument();
@@ -67,8 +68,9 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 						doc = new SolrInputDocument();
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID, new Long(columns.get(0)));
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION, columns.get(1));
-						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES, columns.get(2));
-						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_IS_MULTIANSWERS, new Boolean(columns.get(3)));
+						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES, columns.get(2).split(","));
+						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_IS_MULTIANSWERS,
+								new Boolean(columns.get(3)));
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC, columns.get(4));
 					}
 
@@ -102,6 +104,71 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 
 		client.close();
 		log.info("SOLR server is stopped.");
+	}
+
+	@Override
+	public List<AllianzBotAssesmentQuestion> loadAssesmentQuestionsFromSolr(String[] topics)
+			throws SolrServerException, IOException {
+		String solrAssesmentQuery = prepareForSolrAssesmentQuery(topics);
+		SolrQuery solrQuery = new SolrQuery();
+		solrQuery.setQuery(solrAssesmentQuery).setStart(0).setRows(AllianzBotConstants.AB_MAX_ROWS).setFields(
+				AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID,
+				AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_QUESTION,
+				AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES,
+				AllianzBotConstants.ABAssesmentQuestion.AB_IS_MULTIANSWERS,
+				AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC);
+
+		log.info("Solr Query:{}", solrQuery);
+		SolrDocumentList assesmentQuestions = client.query(solrQuery).getResults();
+		return assesmentQuestions.stream().map(assesmentQuestion -> {
+
+			AllianzBotAssesmentQuestion allianzBotAssesmentQuestion = new AllianzBotAssesmentQuestion();
+			final long questionId = new Long(
+					assesmentQuestion.getFieldValue(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID).toString());
+			allianzBotAssesmentQuestion.setQuestionId(questionId);
+
+			final String question = assesmentQuestion
+					.getFieldValue(AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_QUESTION).toString();
+			allianzBotAssesmentQuestion.setQuestion(question);
+
+			final Object[] objectives = assesmentQuestion
+					.getFieldValues(AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES).toArray();
+			 String[] stringArray = Arrays.copyOf(objectives, objectives.length, String[].class);
+			 
+			allianzBotAssesmentQuestion.setObjectives(stringArray);
+
+			final boolean isMultiAnswer = new Boolean(assesmentQuestion
+					.getFieldValue(AllianzBotConstants.ABAssesmentQuestion.AB_IS_MULTIANSWERS).toString());
+			allianzBotAssesmentQuestion.setIsMultiAnswer(isMultiAnswer);
+
+			final String topic = assesmentQuestion.getFieldValue(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC)
+					.toString();
+			allianzBotAssesmentQuestion.setTopic(topic);
+
+			return allianzBotAssesmentQuestion;
+
+		}).collect(Collectors.toList());
+
+	}
+
+	private String prepareForSolrAssesmentQuery(String[] topics) {
+		StringBuilder solrAssesmentQuery = new StringBuilder();
+		if (ArrayUtils.isNotEmpty(topics)) {
+			int i = 0;
+			for (String topic : topics) {
+				if (i == 0) {
+					solrAssesmentQuery.append(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC)
+							.append(AllianzBotConstants.AB_COLON).append(topic);
+				} else {
+					solrAssesmentQuery.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
+							.append(AllianzBotConstants.AB_SPACE)
+							.append(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC)
+							.append(AllianzBotConstants.AB_COLON).append(topic);
+				}
+			}
+		}
+
+		return solrAssesmentQuery.toString();
 	}
 
 }

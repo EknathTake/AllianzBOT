@@ -14,7 +14,7 @@
 	</div> 
 	
 	<div>
-		<form method="GET" action='<c:url value="/assesment/question"></c:url>' enctype="multipart/form-data">
+		<form method="POST" action='<c:url value="/assesment/questions"></c:url>' enctype="multipart/form-data">
 		    <input type="submit" value="Load Assesment">
 		</form>
 	</div> 

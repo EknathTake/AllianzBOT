@@ -1,6 +1,7 @@
 package com.allianzbot.process.interfaces;
 
 import java.io.IOException;
+import java.util.List;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.exception.TikaException;
@@ -9,6 +10,7 @@ import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotAssesmentAnswer;
+import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 
 public interface IAllianzBotAssesmentProcess {
@@ -34,5 +36,15 @@ public interface IAllianzBotAssesmentProcess {
 	 * @return AllianzBotAssesmentAnswer
 	 */
 	AllianzBotAssesmentAnswer getAnswerByQuestionId(long questionId);
+
+	/**
+	 * Load Assesment by topics
+	 * 
+	 * @param topics
+	 * @return
+	 * @throws IOException 
+	 * @throws SolrServerException 
+	 */
+	List<AllianzBotAssesmentQuestion> loadAssesmentQuestions(String[] topics) throws SolrServerException, IOException;
 
 }

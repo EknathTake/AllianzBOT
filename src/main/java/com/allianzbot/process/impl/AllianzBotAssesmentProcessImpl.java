@@ -1,6 +1,7 @@
 package com.allianzbot.process.impl;
 
 import java.io.IOException;
+import java.util.List;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -16,6 +17,7 @@ import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotAssesmentAnswer;
+import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.model.AllianzBotResponseStatus;
 import com.allianzbot.process.interfaces.IAllianzBotAssesmentProcess;
@@ -81,6 +83,11 @@ public class AllianzBotAssesmentProcessImpl implements IAllianzBotAssesmentProce
 	public AllianzBotAssesmentAnswer getAnswerByQuestionId(long questionId) {
 		
 		return null;
+	}
+
+	@Override
+	public List<AllianzBotAssesmentQuestion> loadAssesmentQuestions(String[] topics) throws SolrServerException, IOException {
+		return allianzBotAssesmentService.loadAssesmentQuestionsFromSolr(topics);
 	}
 
 }
