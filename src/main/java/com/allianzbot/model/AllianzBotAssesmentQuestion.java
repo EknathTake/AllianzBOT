@@ -14,14 +14,14 @@ public class AllianzBotAssesmentQuestion {
 
 	private String question;
 
-	private String[] objectives;
+	private AllianzBotAssesmentObjectives[] objectives;
 
 	private boolean isMultiAnswer;
 
 	private String[] userAnswer;
 
 	private String topic;
-	
+
 	public long getQuestionId() {
 		return questionId;
 	}
@@ -38,11 +38,11 @@ public class AllianzBotAssesmentQuestion {
 		this.question = question;
 	}
 
-	public String[] getObjectives() {
+	public AllianzBotAssesmentObjectives[] getObjectives() {
 		return objectives;
 	}
 
-	public void setObjectives(String[] objectives) {
+	public void setObjectives(AllianzBotAssesmentObjectives[] objectives) {
 		this.objectives = objectives;
 	}
 

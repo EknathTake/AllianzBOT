@@ -26,6 +26,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotAssesmentObjectives;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.service.interfaces.IAllianzBotAssesmentService;
@@ -133,9 +134,15 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 
 			final Object[] objectives = assesmentQuestion
 					.getFieldValues(AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES).toArray();
-			 String[] stringArray = Arrays.copyOf(objectives, objectives.length, String[].class);
+			// String[] stringArray = Arrays.copyOf(objectives, objectives.length, String[].class);
 			 
-			allianzBotAssesmentQuestion.setObjectives(stringArray);
+			AllianzBotAssesmentObjectives[] array = new AllianzBotAssesmentObjectives[objectives.length];
+			for(int i=0; i<objectives.length; i++) {
+				AllianzBotAssesmentObjectives obj = new AllianzBotAssesmentObjectives();
+				obj.setObjective(objectives[i].toString());
+				array[i] = obj;
+			}
+			allianzBotAssesmentQuestion.setObjectives(array );
 
 			final boolean isMultiAnswer = new Boolean(assesmentQuestion
 					.getFieldValue(AllianzBotConstants.ABAssesmentQuestion.AB_IS_MULTIANSWERS).toString());
