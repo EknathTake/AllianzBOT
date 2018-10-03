@@ -1,5 +1,6 @@
 package com.allianzbot.model;
 
+import java.io.Serializable;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Calendar;
@@ -8,7 +9,12 @@ import java.util.TimeZone;
 
 import com.fasterxml.jackson.annotation.JsonFormat;
 
-public class AllianzBotResponseStatus {
+public class AllianzBotResponseStatus implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1878453887504085845L;
 
 	@JsonFormat(shape = JsonFormat.Shape.STRING, pattern = "dd-MM-yyyy HH:mm:ss")
 	private Date timestamp = getDateOfAsianTimeZone(new Date());

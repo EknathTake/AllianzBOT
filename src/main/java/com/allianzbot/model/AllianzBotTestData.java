@@ -1,6 +1,13 @@
 package com.allianzbot.model;
 
-public class AllianzBotTestData {
+import java.io.Serializable;
+
+public class AllianzBotTestData implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1410574892714048031L;
 
 	private String team;
 

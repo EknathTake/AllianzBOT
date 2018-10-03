@@ -1,5 +1,7 @@
 package com.allianzbot.model;
 
+import java.io.Serializable;
+
 /**
  * Response object for AllianzBot for peocess layer. It will contains the
  * extracted content of the particular artifact.
@@ -7,7 +9,12 @@ package com.allianzbot.model;
  * @author eknath.take
  *
  */
-public class AllianzBotDocument {
+public class AllianzBotDocument  implements Serializable{
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1458477751357714282L;
 
 	private String id;
 

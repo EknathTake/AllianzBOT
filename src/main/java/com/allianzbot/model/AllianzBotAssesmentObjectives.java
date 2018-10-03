@@ -1,6 +1,13 @@
 package com.allianzbot.model;
 
-public class AllianzBotAssesmentObjectives {
+import java.io.Serializable;
+
+public class AllianzBotAssesmentObjectives implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 819269240181206442L;
 
 	private String objective;
 

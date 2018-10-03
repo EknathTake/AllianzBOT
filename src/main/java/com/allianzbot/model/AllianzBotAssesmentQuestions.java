@@ -1,15 +1,18 @@
 package com.allianzbot.model;
 
+import java.io.Serializable;
 import java.util.Map;
 
 import org.springframework.context.annotation.Scope;
 import org.springframework.context.annotation.ScopedProxyMode;
 import org.springframework.stereotype.Component;
 
-@Component
-@Scope(proxyMode = ScopedProxyMode.TARGET_CLASS, value = "session")
-public class AllianzBotAssesmentQuestions {
+public class AllianzBotAssesmentQuestions implements Serializable {
 
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -1832151999712402276L;
 	private Map<Long, AllianzBotAssesmentQuestion> allianzBotQuestions;
 
 	public Map<Long, AllianzBotAssesmentQuestion> getAllianzBotQuestions() {

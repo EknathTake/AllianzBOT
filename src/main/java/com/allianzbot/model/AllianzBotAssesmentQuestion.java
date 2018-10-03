@@ -1,5 +1,6 @@
 package com.allianzbot.model;
 
+import java.io.Serializable;
 import java.util.Arrays;
 
 /**
@@ -8,7 +9,12 @@ import java.util.Arrays;
  * @author eknath.take
  *
  */
-public class AllianzBotAssesmentQuestion {
+public class AllianzBotAssesmentQuestion implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 5480256652381389032L;
 
 	private long questionId;
 
