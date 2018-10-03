@@ -2,6 +2,7 @@ package com.allianzbot.process.interfaces;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
 
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.exception.TikaException;
@@ -34,8 +35,10 @@ public interface IAllianzBotAssesmentProcess {
 	 * 
 	 * @param questionId
 	 * @return AllianzBotAssesmentAnswer
+	 * @throws IOException 
+	 * @throws SolrServerException 
 	 */
-	AllianzBotAssesmentAnswer getAnswerByQuestionId(long questionId);
+	double getAssesmentScore(Map<Long, AllianzBotAssesmentQuestion> questionId) throws SolrServerException, IOException;
 
 	/**
 	 * Load Assesment by topics

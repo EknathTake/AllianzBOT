@@ -1,7 +1,6 @@
 package com.allianzbot.service.impl;
 
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
@@ -26,6 +25,7 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 
 import com.allianzbot.exception.AllianzBotException;
+import com.allianzbot.model.AllianzBotAssesmentAnswer;
 import com.allianzbot.model.AllianzBotAssesmentObjectives;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
@@ -166,6 +166,7 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 				if (i == 0) {
 					solrAssesmentQuery.append(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC)
 							.append(AllianzBotConstants.AB_COLON).append(topic);
+					i++;
 				} else {
 					solrAssesmentQuery.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
 							.append(AllianzBotConstants.AB_SPACE)
@@ -176,6 +177,54 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 		}
 
 		return solrAssesmentQuery.toString();
+	}
+
+	@Override
+	public List<AllianzBotAssesmentAnswer> loadAssesmentAnswers(List<Long> questionIds) throws SolrServerException, IOException {
+		String answerQueryBuilder = prepareAnswerQuery(questionIds);
+		SolrQuery solrQuery = new SolrQuery();
+		solrQuery.setQuery(answerQueryBuilder).setStart(0).setRows(AllianzBotConstants.AB_MAX_ROWS).setFields(
+				AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID,
+				AllianzBotConstants.ABAssesmentAnswers.AB_ANSWER_ID,
+				AllianzBotConstants.ABAssesmentAnswers.AB_CORRECT_ANSWER);
+
+		log.info("Inside AllianzBotAssesmentServiceImpl.loadAssesmentAnswers Solr Query :{}", solrQuery);
+		SolrDocumentList assesmentQuestions = client.query(solrQuery).getResults();
+		
+		return assesmentQuestions.stream()
+								.map(actualAnswer -> {
+									AllianzBotAssesmentAnswer answer = null;
+									final Object answerId = actualAnswer.getFieldValue(AllianzBotConstants.ABAssesmentAnswers.AB_ANSWER_ID);
+									final Object correstAnswer = actualAnswer.getFieldValue(AllianzBotConstants.ABAssesmentAnswers.AB_CORRECT_ANSWER);
+									final Object questionId = actualAnswer.getFieldValue(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID);
+									if(null != correstAnswer && null != questionId && null != answerId) {
+										answer = new AllianzBotAssesmentAnswer();
+										answer.setAnswerId(Long.parseLong(answerId.toString()));
+										answer.setQuestionId(Long.parseLong(questionId.toString()));
+										answer.setActualAnswer(correstAnswer.toString());
+									}
+									return answer;
+								}).collect(Collectors.toList());
+	}
+
+	private String prepareAnswerQuery(List<Long> questionIds) {
+		StringBuilder answerQueryBuilder = new StringBuilder();
+		if (CollectionUtils.isNotEmpty(questionIds)) {
+			int i = 0;
+			for (Long questionId : questionIds) {
+				if (i == 0) {
+					answerQueryBuilder.append(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID)
+							.append(AllianzBotConstants.AB_COLON).append(questionId);
+					i++;
+				} else {
+					answerQueryBuilder.append(AllianzBotConstants.AB_SPACE).append(AllianzBotConstants.AB_OR)
+							.append(AllianzBotConstants.AB_SPACE)
+							.append(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID)
+							.append(AllianzBotConstants.AB_COLON).append(questionId);
+				}
+			}
+		}
+		return answerQueryBuilder.toString();
 	}
 
 }

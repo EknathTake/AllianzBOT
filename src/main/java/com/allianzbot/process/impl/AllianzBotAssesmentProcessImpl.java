@@ -2,6 +2,10 @@ package com.allianzbot.process.impl;
 
 import java.io.IOException;
 import java.util.List;
+import java.util.Map;
+import java.util.Objects;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import javax.inject.Inject;
 import javax.inject.Named;
@@ -17,6 +21,7 @@ import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotAssesmentAnswer;
+import com.allianzbot.model.AllianzBotAssesmentObjectives;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.model.AllianzBotResponseStatus;
@@ -80,14 +85,39 @@ public class AllianzBotAssesmentProcessImpl implements IAllianzBotAssesmentProce
 	}
 
 	@Override
-	public AllianzBotAssesmentAnswer getAnswerByQuestionId(long questionId) {
-		
-		return null;
+	public List<AllianzBotAssesmentQuestion> loadAssesmentQuestions(String[] topics) throws SolrServerException, IOException {
+		return allianzBotAssesmentService.loadAssesmentQuestionsFromSolr(topics);
 	}
 
 	@Override
-	public List<AllianzBotAssesmentQuestion> loadAssesmentQuestions(String[] topics) throws SolrServerException, IOException {
-		return allianzBotAssesmentService.loadAssesmentQuestionsFromSolr(topics);
+	public double getAssesmentScore(Map<Long, AllianzBotAssesmentQuestion> assesmentMap) throws SolrServerException, IOException {
+		List<Long> ll = assesmentMap.values()
+				.stream()
+				.map(AllianzBotAssesmentQuestion::getQuestionId)
+				.collect(Collectors.toList());
+		List<AllianzBotAssesmentAnswer> assesmentAnswers = allianzBotAssesmentService.loadAssesmentAnswers(ll);
+		double score = 0;
+		for (AllianzBotAssesmentAnswer allianzBotAssesmentAnswer : assesmentAnswers) {
+			if(null != allianzBotAssesmentAnswer) {
+				/***** user question *****/
+				AllianzBotAssesmentQuestion question = assesmentMap.get(allianzBotAssesmentAnswer.getQuestionId());
+				AllianzBotAssesmentObjectives[] userObjectiveAnswers = question.getObjectives();
+				String userAnswer = Stream.of(userObjectiveAnswers)
+										.filter(Objects::nonNull)
+										.filter(AllianzBotAssesmentObjectives::isChecked)
+										.map(mapper -> mapper.getObjective())
+										.collect(Collectors.joining(","));	
+				for (AllianzBotAssesmentAnswer assesmentAnswer : assesmentAnswers) {
+					if(null != assesmentAnswer) {
+						if(userAnswer.equals(assesmentAnswer.getActualAnswer())
+								&& allianzBotAssesmentAnswer.getQuestionId() == assesmentAnswer.getQuestionId()) {
+							score +=5;
+						}
+					}
+				}
+			}
+		}
+		return score;
 	}
 
 }
