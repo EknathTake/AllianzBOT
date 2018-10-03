@@ -2,10 +2,11 @@ package com.allianzbot.controller;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
+
+import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
 import javax.servlet.http.HttpSession;
@@ -28,10 +29,8 @@ import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
-import com.allianzbot.model.AllianzBotAssesmentQuestions;
 import com.allianzbot.model.AllianzBotResponseStatus;
 import com.allianzbot.process.interfaces.IAllianzBotAssesmentProcess;
-import com.allianzbot.process.interfaces.IAllianzBotProcess;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.utils.FileUtils;
 
@@ -59,6 +58,9 @@ public class AllianzBotAssesmentController {
 	@Named("fileUtils")
 	private FileUtils fileUtils;
 
+	@Resource(name = "assesmentMap")
+	private Map<Long, AllianzBotAssesmentQuestion> assesmentMap;
+
 	/**
 	 * Load the Assesment related questions related to topic.
 	 * 
@@ -70,7 +72,7 @@ public class AllianzBotAssesmentController {
 	@GetMapping(value = "/assesment/questions")
 	public @ResponseBody List<AllianzBotAssesmentQuestion> loadAssessment(@RequestParam(name = "topic") String topic)
 			throws SolrServerException, IOException {
-		log.info("Inside AllianzBotAssesmentController.loadAssessment() topic is {}", topic);
+		log.info("AllianzBotAssesmentController.loadAssessment() topic is {}", topic);
 		return allianzBotAssesmentProcess.loadAssesmentQuestions(new String[] { topic });
 	}
 
@@ -108,25 +110,25 @@ public class AllianzBotAssesmentController {
 	}
 
 	/**
-	 * Store the answer into the session scope
-	 * 
 	 * @param allianzBotQuestion
 	 */
 	@PostMapping(value = "/assesment/answer")
 	public void storeUserChoiceAnswers(@RequestBody AllianzBotAssesmentQuestion allianzBotQuestion,
 			HttpSession session) {
-		log.info("Inside AllianzBotAssesmentController.saveQuestionsAnswer");
-		AllianzBotAssesmentQuestions assesmentQuestions = (AllianzBotAssesmentQuestions) session
-				.getAttribute("assesmentQuestions");
-		log.info("Inside AllianzBotAssesmentController.saveQuestionsAnswer before update AllianzBotQuestions :{}",
-				assesmentQuestions);
-		if (null != assesmentQuestions) {
-			Map<Long, AllianzBotAssesmentQuestion> questions = assesmentQuestions.getAllianzBotQuestions();
-			questions.put(allianzBotQuestion.getQuestionId(), allianzBotQuestion);
-			assesmentQuestions.setAllianzBotQuestions(questions);
-			log.info("Inside AllianzBotAssesmentController.saveQuestionsAnswer after update AllianzBotQuestions :{}",
-					assesmentQuestions);
-			session.setAttribute("assesmentQuestions", assesmentQuestions);
-		}
+		log.info("AllianzBotAssesmentController.saveQuestionsAnswer started");
+
+		assesmentMap.put(allianzBotQuestion.getQuestionId(), allianzBotQuestion);
+		log.info("AllianzBotAssesmentController.saveQuestionsAnswer Finished");
+	}
+
+	@GetMapping(value = "/assesment/finished")
+	public @ResponseBody String exitAssesment() {
+		log.info("Assesment: {}", assesmentMap);
+		//load all the answers
+		//check the correct answers
+		
+		//prepare for the result for user and lead
+		//return the response
+		return "Assesment Finished successfully.";
 	}
 }

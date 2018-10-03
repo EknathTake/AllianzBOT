@@ -14,6 +14,7 @@
 
 	<!-- Enables the Spring MVC @Controller programming model -->
 	<annotation-driven />
+	<util:map id="assesmentMap" />
 	
 	<!-- Enables the detection of @Async and @Scheduled annotations on any Spring-managed object. -->
 	<task:annotation-driven/>
