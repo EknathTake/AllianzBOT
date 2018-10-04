@@ -34,7 +34,7 @@ import org.xml.sax.SAXException;
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.model.AllianzBotResponseStatus;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.process.interfaces.IAllianzBotProcess;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
@@ -214,9 +214,7 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 							.collect(Collectors.joining(" "));
 
 			// removing duplicates keywords from the query...
-			// List<String> list = new ArrayList<>(Arrays.asList(query.split("\\s")));
 			TreeSet<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-			// list.removeIf(s -> !seen.add(s));
 			seen.addAll(Arrays.asList(query.split("\\s")));
 			query = FileUtils.removeStopWords(String.join(" ", seen));
 			return allianzBotSolrService.searchDocuments(query, isSearch);
@@ -226,21 +224,21 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 	}
 
 	@Override
-	public AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSentence document)
+	public AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSearchResponse document)
 			throws SolrServerException, IOException, AllianzBotException {
 
 		// get the all the documents with the same answer to update the likes
-		Function<? super AllianzBotSentence, ? extends AllianzBotSentence> functionLikes = statement -> {
+		Function<? super AllianzBotSearchResponse, ? extends AllianzBotSearchResponse> functionLikes = statement -> {
 			statement.setLikes(document.getLikes());
 			return statement;
 		};
-		Predicate<? super AllianzBotSentence> predicateAnswer = statement -> statement.getAnswer()
+		Predicate<? super AllianzBotSearchResponse> predicateAnswer = statement -> statement.getAnswer()
 				.equalsIgnoreCase(document.getAnswer());
 
-		List<AllianzBotSentence> duplicateAnswers = searchDocument(document.getQuestion(), false).getDocuments()
+		List<AllianzBotSearchResponse> duplicateAnswers = searchDocument(document.getQuestion(), false).getDocuments()
 				.parallelStream().filter(predicateAnswer).map(functionLikes).collect(Collectors.toList());
 
-		for (AllianzBotSentence allianzBotSentence : duplicateAnswers) {
+		for (AllianzBotSearchResponse allianzBotSentence : duplicateAnswers) {
 			allianzBotSolrService.updateScore(allianzBotSentence);
 		}
 

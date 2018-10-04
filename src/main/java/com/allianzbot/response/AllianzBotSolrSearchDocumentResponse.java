@@ -3,7 +3,7 @@ package com.allianzbot.response;
 import java.util.Set;
 
 import com.allianzbot.model.AllianzBotResponseStatus;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 
 /**
  * Response object for AllianzBot. It will contains the extracted content of the
@@ -14,18 +14,18 @@ import com.allianzbot.model.AllianzBotSentence;
  */
 public class AllianzBotSolrSearchDocumentResponse {
 
-	private Set<AllianzBotSentence> documents;
+	private Set<AllianzBotSearchResponse> documents;
 
 	/**
 	 * If any exception occured it will give us the information regarding exception.
 	 */
 	private AllianzBotResponseStatus error;
 
-	public Set<AllianzBotSentence> getDocuments() {
+	public Set<AllianzBotSearchResponse> getDocuments() {
 		return documents;
 	}
 
-	public void setDocuments(Set<AllianzBotSentence> documents) {
+	public void setDocuments(Set<AllianzBotSearchResponse> documents) {
 		this.documents = documents;
 	}
 

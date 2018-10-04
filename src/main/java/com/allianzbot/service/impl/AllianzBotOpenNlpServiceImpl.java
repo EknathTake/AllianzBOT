@@ -18,7 +18,7 @@ import org.springframework.core.io.ClassPathResource;
 import org.springframework.stereotype.Service;
 
 import com.allianzbot.exception.AllianzBotException;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 
 import opennlp.tools.lemmatizer.DictionaryLemmatizer;
@@ -58,7 +58,7 @@ public class AllianzBotOpenNlpServiceImpl implements IAllianzBotOpenNlpService {
 	private ClassPathResource resource;
 
 	@Override
-	public List<AllianzBotSentence> sentenceDetect(String paragraph)
+	public List<AllianzBotSearchResponse> sentenceDetect(String paragraph)
 			throws InvalidFormatException, IOException, AllianzBotException {
 
 		// load the training data
@@ -72,7 +72,7 @@ public class AllianzBotOpenNlpServiceImpl implements IAllianzBotOpenNlpService {
 
 			return IntStream.range(0, sentences.length).filter(i -> StringUtils.isNotEmpty(sentences[i]))
 					.mapToObj(i -> {
-						AllianzBotSentence allianzBotSentence = new AllianzBotSentence();
+						AllianzBotSearchResponse allianzBotSentence = new AllianzBotSearchResponse();
 						allianzBotSentence.setScore(probs[i]);
 						allianzBotSentence.setAnswer(sentences[i]);
 						return allianzBotSentence;

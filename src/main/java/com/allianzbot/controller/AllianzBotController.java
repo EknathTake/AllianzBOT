@@ -32,7 +32,7 @@ import org.springframework.web.servlet.ModelAndView;
 import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.process.interfaces.IAllianzBotProcess;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
@@ -113,7 +113,7 @@ public class AllianzBotController {
 
 	@PutMapping(value = "/update/document")
 	public ResponseEntity<AllianzBotSolrCreateDocumentResponse> updateSolrDocument(
-			@RequestBody @Valid AllianzBotSentence document, BindingResult bindingResult)
+			@RequestBody @Valid AllianzBotSearchResponse document, BindingResult bindingResult)
 			throws SolrServerException, IOException, AllianzBotException, SAXException, TikaException {
 
 		log.debug("AllianzBotController.updateSolrDocument Started Document is :{}", document);

@@ -12,6 +12,7 @@ import javax.annotation.PreDestroy;
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
 import org.apache.commons.lang3.ArrayUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrClient;
 import org.apache.solr.client.solrj.SolrQuery;
 import org.apache.solr.client.solrj.SolrServerException;
@@ -63,13 +64,14 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 						doc = new SolrInputDocument();
 						doc.addField(AllianzBotConstants.ABAssesmentAnswers.AB_ANSWER_ID, new Long(columns.get(0)));
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID, new Long(columns.get(1)));
-						doc.addField(AllianzBotConstants.ABAssesmentAnswers.AB_CORRECT_ANSWER, columns.get(2));
+						doc.addField(AllianzBotConstants.ABAssesmentAnswers.AB_CORRECT_ANSWER, columns.get(2)
+								.replaceAll(AllianzBotConstants.AB_ASSESMENT_SPLITERATOR, AllianzBotConstants.AB_COMMA));
 					} else if (columns.size() == 5) {
 						/** for asssment questions */
 						doc = new SolrInputDocument();
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION_ID, new Long(columns.get(0)));
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_QUESTION, columns.get(1));
-						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES, columns.get(2).split(","));
+						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_OBJECTIVES, StringUtils.split(columns.get(2), "#$"));
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_IS_MULTIANSWERS,
 								new Boolean(columns.get(3)));
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC, columns.get(4));

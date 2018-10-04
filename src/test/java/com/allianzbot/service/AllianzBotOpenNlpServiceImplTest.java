@@ -14,7 +14,7 @@ import org.springframework.test.context.junit4.SpringJUnit4ClassRunner;
 import org.springframework.test.context.web.WebAppConfiguration;
 
 import com.allianzbot.exception.AllianzBotException;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.service.impl.AllianzBotOpenNlpServiceImpl;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 
@@ -38,7 +38,7 @@ public class AllianzBotOpenNlpServiceImplTest {
 	@Test
 	public void testSentenceDetect() throws InvalidFormatException, IOException, AllianzBotException {
 
-		 List<AllianzBotSentence> actualOutput = classUnderTest.sentenceDetect("Hi. How are you? This is Eknath.");
+		 List<AllianzBotSearchResponse> actualOutput = classUnderTest.sentenceDetect("Hi. How are you? This is Eknath.");
 		assertEquals(2, actualOutput.size());
 	}
 

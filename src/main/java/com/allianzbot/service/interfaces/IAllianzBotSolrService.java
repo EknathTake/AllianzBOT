@@ -6,7 +6,7 @@ import org.apache.solr.client.solrj.response.UpdateResponse;
 
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotDocument;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 
 /**
@@ -43,6 +43,6 @@ public interface IAllianzBotSolrService {
 	 * 
 	 * @param document
 	 */
-	void updateScore(AllianzBotSentence document) throws SolrServerException, IOException, AllianzBotException;
+	void updateScore(AllianzBotSearchResponse document) throws SolrServerException, IOException, AllianzBotException;
 
 }

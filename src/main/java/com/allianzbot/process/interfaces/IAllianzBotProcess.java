@@ -11,7 +11,7 @@ import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotDocument;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 
@@ -48,7 +48,7 @@ public interface IAllianzBotProcess {
 	 * @param document
 	 * @return
 	 */
-	AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSentence document)
+	AllianzBotSolrCreateDocumentResponse updateScore(AllianzBotSearchResponse document)
 			throws SolrServerException, IOException, AllianzBotException;
 
 	/**

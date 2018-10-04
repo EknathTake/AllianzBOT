@@ -4,7 +4,7 @@ import java.io.IOException;
 import java.util.List;
 
 import com.allianzbot.exception.AllianzBotException;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 
 import opennlp.tools.postag.POSSample;
 import opennlp.tools.util.InvalidFormatException;
@@ -28,7 +28,7 @@ public interface IAllianzBotOpenNlpService {
 	 * @throws IOException
 	 * @throws AllianzBotException
 	 */
-	List<AllianzBotSentence> sentenceDetect(String paragraph)
+	List<AllianzBotSearchResponse> sentenceDetect(String paragraph)
 			throws InvalidFormatException, IOException, AllianzBotException;
 
 	/**

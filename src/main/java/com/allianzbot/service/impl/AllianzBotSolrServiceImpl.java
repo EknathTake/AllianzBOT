@@ -6,9 +6,6 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-import java.util.SortedMap;
-import java.util.SortedSet;
-import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,7 +34,7 @@ import org.springframework.stereotype.Service;
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.exception.AllianzBotRunTimeException;
 import com.allianzbot.model.AllianzBotDocument;
-import com.allianzbot.model.AllianzBotSentence;
+import com.allianzbot.model.AllianzBotSearchResponse;
 import com.allianzbot.response.AllianzBotSolrSearchDocumentResponse;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
 import com.allianzbot.service.interfaces.IAllianzBotSolrService;
@@ -143,11 +140,16 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 
 		// Preparing to Solr query
 		SolrQuery solrQuery = new SolrQuery();
-		solrQuery.setQuery(solrSearchQuery).setStart(0).setRows(AllianzBotConstants.AB_MAX_ROWS).setFields(
-				AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_ID, AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_CONTENT,
-				AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_QUESTION, AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_ANSWER,
-				AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_SCORE, AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_TOTAL_LIKES,
-				AllianzBotConstants.ABTestCenter.AB_FAILURE_CATEGORY, AllianzBotConstants.ABTestCenter.AB_FAILED_LOG);
+		solrQuery.setQuery(solrSearchQuery).setStart(0)
+				.setRows(AllianzBotConstants.AB_MAX_ROWS)
+				.setFields(AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_ID,
+					AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_CONTENT,
+					AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_QUESTION,
+					AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_ANSWER,
+					AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_SCORE,
+					AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_TOTAL_LIKES,
+					AllianzBotConstants.ABTestCenter.AB_FAILURE_CATEGORY,
+					AllianzBotConstants.ABTestCenter.AB_FAILED_LOG);
 
 		log.info("Solr Query:{}", solrQuery);
 		SolrDocumentList documents = client.query(solrQuery).getResults();
@@ -198,7 +200,7 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			throws InvalidFormatException, IOException, AllianzBotException {
 
 		AllianzBotSolrSearchDocumentResponse allianzBotSolrServiceResponse = new AllianzBotSolrSearchDocumentResponse();
-		Set<AllianzBotSentence> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
+		Set<AllianzBotSearchResponse> result = new TreeSet<>(new AllianzBotScoreAndHitsComparator());
 		// tokenize to query
 		List<String> tokensOfTheQuery = Stream.of(allianzBotOpenNlpService.tokenize(keywords)).map(s -> s.toLowerCase())
 				.collect(Collectors.toList());
@@ -217,8 +219,13 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 					.getFieldValue(AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_QUESTION));
 			if (CollectionUtils.isNotEmpty(listAnswers) && CollectionUtils.isNotEmpty(listQuestions)
 					&& CollectionUtils.isNotEmpty(likes)) {
-				AllianzBotSentence mapToAllianzBotSentence = mapToAllianzBotSentence(id, listQuestions.get(0),
-						listAnswers.get(0), score, likes.get(0));
+				AllianzBotSearchResponse mapToAllianzBotSentence = new AllianzBotSearchResponse.AllianzBotSearchResponseBuilder()
+						.setId(id)
+						.setQuestion(listQuestions.get(0))
+						.setAnswer(listAnswers.get(0))
+						.setScore(score)
+						.setLikes(likes.get(0))
+						.build();
 				if (null != mapToAllianzBotSentence)
 					result.add(mapToAllianzBotSentence);
 			}
@@ -229,8 +236,8 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			if (CollectionUtils.isNotEmpty(contents)) {
 				String content = contents.get(0);
 				try {
-					List<AllianzBotSentence> sentences = allianzBotOpenNlpService.sentenceDetect(content);
-					for (AllianzBotSentence allianzBotSentence : sentences) {
+					List<AllianzBotSearchResponse> sentences = allianzBotOpenNlpService.sentenceDetect(content);
+					for (AllianzBotSearchResponse allianzBotSentence : sentences) {
 						if (null != allianzBotSentence) {
 							String[] tokensOfTheSentences = allianzBotOpenNlpService
 									.tokenize(FileUtils.removeStopWords(allianzBotSentence.getAnswer()));
@@ -240,8 +247,14 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 									.filter(token -> tokensOfTheQuery.contains(token.toLowerCase())).count();
 							final double calculatedScore = calculateScore(features, tokensOfTheSentences.length);
 							final String newId = DigestUtils.md5Hex(keywords.concat(allianzBotSentence.getAnswer()));
-							AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(newId, keywords,
-									allianzBotSentence.getAnswer(), calculatedScore, allianzBotSentence.getLikes());
+							AllianzBotSearchResponse allianzBotNewSentence = new AllianzBotSearchResponse.AllianzBotSearchResponseBuilder()
+									.setId(newId)
+									.setAnswer(allianzBotSentence.getAnswer())
+									.setQuestion(keywords)
+									.setScore(calculatedScore)
+									.setLikes(allianzBotSentence.getLikes())
+									.build();
+									
 							if (null != allianzBotNewSentence)
 								result.add(allianzBotNewSentence);
 						}
@@ -254,20 +267,38 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 			}
 			
 			// log.info("-------------TEST DATA------------------");
+			
+			AllianzBotSearchResponse allianzBotNewSentence = new AllianzBotSearchResponse.AllianzBotSearchResponseBuilder()
+																			.setId(id)
+																			.setQuestion(keywords)
+																			.setScore(score)
+																			.setLikes(likes.get(0))
+																			.build();
 			@SuppressWarnings("unchecked")
 			List<String> failureCategories = (List<String>) documents.get(x).get(AllianzBotConstants.ABTestCenter.AB_FAILURE_CATEGORY);
 			if (CollectionUtils.isNotEmpty(failureCategories)) {
-				AllianzBotSentence allianzBotNewSentence = mapToAllianzBotSentence(id, keywords,
-						failureCategories.get(0), score, likes.get(0));
-				if (null != allianzBotNewSentence)
-					result.add(allianzBotNewSentence);
+				allianzBotNewSentence = new AllianzBotSearchResponse
+						.AllianzBotSearchResponseBuilder(allianzBotNewSentence)
+						.setFailedCategory(failureCategories.get(0))
+						.build();
 			}
-
+			
+			@SuppressWarnings("unchecked")
+			List<String> failureLog = (List<String>) documents.get(x).get(AllianzBotConstants.ABTestCenter.AB_FAILED_LOG);
+			if (CollectionUtils.isNotEmpty(failureLog)) {
+				allianzBotNewSentence = new AllianzBotSearchResponse
+						.AllianzBotSearchResponseBuilder(allianzBotNewSentence)
+						.setFailedLog(failureLog.get(0))
+						.build();
+			}
+			
+			if (null != allianzBotNewSentence)
+				result.add(allianzBotNewSentence);
 		}
 
 		// remove all the duplicate answers
 		if (isSearch) {
-			Set<AllianzBotSentence> newAbs = new TreeSet<AllianzBotSentence>(new AllianzBotAnswerComparator());
+			Set<AllianzBotSearchResponse> newAbs = new TreeSet<AllianzBotSearchResponse>(new AllianzBotAnswerComparator());
 			newAbs.addAll(result);
 			result.clear();
 
@@ -281,27 +312,12 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
 		return allianzBotSolrServiceResponse;
 	}
 
-	private AllianzBotSentence mapToAllianzBotSentence(String id, String question, String answer, double score,
-			double likes) {
-		AllianzBotSentence allianzBotNewSentence = null;
-		if (StringUtils.isNotEmpty(id) && Double.compare(score, 0) > 0) {
-			allianzBotNewSentence = new AllianzBotSentence();
-			allianzBotNewSentence.setId(id);
-			allianzBotNewSentence.setScore(score);
-			allianzBotNewSentence.setQuestion(question);
-			allianzBotNewSentence.setAnswer(answer);
-			allianzBotNewSentence.setLikes(likes);
-		}
-		return allianzBotNewSentence;
-
-	}
-
 	private double calculateScore(double features, int totalFeatures) {
 		return features / totalFeatures;
 	}
 
 	@Override
-	public void updateScore(AllianzBotSentence document) throws SolrServerException, IOException, AllianzBotException {
+	public void updateScore(AllianzBotSearchResponse document) throws SolrServerException, IOException, AllianzBotException {
 
 		SolrInputDocument solrInputDocument = new SolrInputDocument();
 		if (null != document) {
@@ -337,11 +353,14 @@ public class AllianzBotSolrServiceImpl implements IAllianzBotSolrService {
  * @author eknath.take
  *
  */
-class AllianzBotAnswerComparator implements Comparator<AllianzBotSentence> {
+class AllianzBotAnswerComparator implements Comparator<AllianzBotSearchResponse> {
 
 	@Override
-	public int compare(AllianzBotSentence abs1, AllianzBotSentence abs2) {
-		return abs1.getAnswer().compareTo(abs2.getAnswer());
+	public int compare(AllianzBotSearchResponse abs1, AllianzBotSearchResponse abs2) {
+ 		if(null == abs1.getAnswer() || null == abs2.getAnswer())
+			return 0;
+		else
+			return abs1.getAnswer().compareTo(abs2.getAnswer());
 	}
 }
 
@@ -351,10 +370,10 @@ class AllianzBotAnswerComparator implements Comparator<AllianzBotSentence> {
  * @author eknath.take
  *
  */
-class AllianzBotScoreAndHitsComparator implements Comparator<AllianzBotSentence> {
+class AllianzBotScoreAndHitsComparator implements Comparator<AllianzBotSearchResponse> {
 
 	@Override
-	public int compare(AllianzBotSentence abs1, AllianzBotSentence abs2) {
+	public int compare(AllianzBotSearchResponse abs1, AllianzBotSearchResponse abs2) {
 		final double thisScore = Double.sum(abs1.getScore(), abs1.getLikes());
 		final double allianzBotScore = Double.sum(abs2.getScore(), abs2.getLikes());
 		if (thisScore == allianzBotScore) {

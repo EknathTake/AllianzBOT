@@ -13,6 +13,10 @@ public class AllianzBotConstants {
 	public static final String AB_OR = "OR";
 
 	public static final String AB_SPECIAL_CHARACTERS = "[$&+,:;=?@#|'<>.^*()%!-]";
+	
+	public static final String AB_ASSESMENT_SPLITERATOR = "#$";
+
+	public static final String AB_COMMA = ",";
 
 	/****************************** KT ******************************************/
 	public class ABKnowledgeSharing {
