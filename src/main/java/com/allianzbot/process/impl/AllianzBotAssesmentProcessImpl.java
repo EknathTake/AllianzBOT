@@ -154,7 +154,8 @@ public class AllianzBotAssesmentProcessImpl implements IAllianzBotAssesmentProce
 		exam.setTotalMarks(questionIds.size()*5);
 		exam.setPercentages((exam.getScore()/exam.getTotalMarks())*100);
 		
-		allianzBotAssesmentService.sendAssesmentScoreMailToLead(exam);
+		/**TODO: Uncomment this to enable sending email.**/
+		//allianzBotAssesmentService.sendAssesmentScoreMailToLead(exam);
 		return exam;
 	}
 
