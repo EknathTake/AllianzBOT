@@ -9,6 +9,7 @@ import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotAssesmentAnswer;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotExam;
 
 public interface IAllianzBotAssesmentService {
 
@@ -23,4 +24,6 @@ public interface IAllianzBotAssesmentService {
 	UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse) throws AllianzBotException, SolrServerException, IOException;
 	
 	List<AllianzBotAssesmentAnswer> loadAssesmentAnswers(List<Long> questionIds) throws SolrServerException, IOException;
+	
+	void sendAssesmentScoreMailToLead(AllianzBotExam exam);
 }

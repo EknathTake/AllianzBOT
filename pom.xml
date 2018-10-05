@@ -64,11 +64,8 @@
 			<version>${org.apache.lucene.version}</version>
 		</dependency>
 
-		<!-- <dependency>
-			<groupId>org.apache.solr</groupId>
-			<artifactId>solr-core</artifactId>
-			<version>${org.apache.lucene.version}</version>
-		</dependency> -->
+		<!-- <dependency> <groupId>org.apache.solr</groupId> <artifactId>solr-core</artifactId> 
+			<version>${org.apache.lucene.version}</version> </dependency> -->
 
 
 		<!-- Apache TIKA -->
@@ -141,6 +138,11 @@
 			<artifactId>spring-test</artifactId>
 			<version>${org.springframework-version}</version>
 		</dependency>
+		<dependency>
+			<groupId>org.springframework.integration</groupId>
+			<artifactId>spring-integration-mail</artifactId>
+			<version>${org.springframework-version}</version>
+		</dependency>
 
 		<!-- AspectJ -->
 		<dependency>
@@ -167,11 +169,8 @@
 			<version>${org.slf4j-version}</version>
 			<scope>runtime</scope>
 		</dependency>
-		<!-- <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-simple</artifactId>
-            <version>${org.slf4j-version}</version>
-        </dependency> -->
+		<!-- <dependency> <groupId>org.slf4j</groupId> <artifactId>slf4j-simple</artifactId> 
+			<version>${org.slf4j-version}</version> </dependency> -->
 
 		<!-- Validators -->
 		<dependency>
@@ -253,6 +252,11 @@
 			<scope>test</scope>
 		</dependency>
 
+		<dependency>
+			<groupId>javax.mail</groupId>
+			<artifactId>mail</artifactId>
+			<version>1.4.7</version>
+		</dependency>
 	</dependencies>
 	<build>
 		<plugins>

@@ -2,27 +2,22 @@ package com.allianzbot.controller;
 
 import java.io.FileNotFoundException;
 import java.io.IOException;
-import java.time.LocalDateTime;
 import java.util.Date;
 import java.util.List;
 import java.util.Map;
-
 import javax.annotation.Resource;
 import javax.inject.Inject;
 import javax.inject.Named;
-import javax.servlet.http.HttpServletRequest;
-import javax.servlet.http.HttpSession;
-
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.tika.exception.TikaException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
-import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.CrossOrigin;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.bind.annotation.RestController;
@@ -35,6 +30,7 @@ import com.allianzbot.model.AllianzBotExam;
 import com.allianzbot.model.AllianzBotResponseStatus;
 import com.allianzbot.process.interfaces.IAllianzBotAssesmentProcess;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
+import com.allianzbot.utils.AllianzBotConstants;
 import com.allianzbot.utils.FileUtils;
 
 /**
@@ -61,8 +57,8 @@ public class AllianzBotAssesmentController {
 	private FileUtils fileUtils;
 
 	@Resource(name = "assesmentMap")
-	private Map<Long, AllianzBotAssesmentQuestion> assesmentMap;
-	
+	private Map<String, AllianzBotAssesmentQuestion> assesmentMap;
+
 	@Value("${exam.time.minutes}")
 	private Integer examTimeMins;
 
@@ -76,12 +72,12 @@ public class AllianzBotAssesmentController {
 	 */
 	@GetMapping(value = "/assesment/questions")
 	public @ResponseBody List<AllianzBotAssesmentQuestion> loadAssessmentQuestions(
-			@RequestParam(name = "topic") String topic, HttpServletRequest request, Model model)
+			@RequestParam(name = "topic") String topic)
 			throws SolrServerException, IOException {
-		log.info("AllianzBotAssesmentController.loadAssessment() topic is {}", topic);
-		request.getSession().setAttribute("examStarted", new Date().getTime());
-		//final int remaining = getRemainingTime(request);
-		//model.addAttribute("examTime", remaining);
+		log.info("AllianzBotAssesmentController.loadAssessment() topic is: {}", topic);
+		//request.getSession().setAttribute("examStarted", new Date().getTime());
+		// final int remaining = getRemainingTime(request);
+		// model.addAttribute("examTime", remaining);
 		return allianzBotAssesmentProcess.loadAssesmentQuestions(new String[] { topic });
 	}
 
@@ -97,9 +93,11 @@ public class AllianzBotAssesmentController {
 	 * @throws SAXException
 	 */
 	@PostMapping(value = "/assesment/questions")
-	public @ResponseBody AllianzBotSolrCreateDocumentResponse saveAssesment() throws FileNotFoundException, IOException,
-			SAXException, TikaException, AllianzBotException, SolrServerException {
-		log.info("Inside AllianzBotAssesmentController.saveQuestions()");
+	public @ResponseBody AllianzBotSolrCreateDocumentResponse storeAssesmentIntoSolr()
+			throws FileNotFoundException, IOException, SAXException, TikaException, AllianzBotException,
+			SolrServerException {
+
+		log.info("AllianzBotAssesmentController.saveAssesment() started{}");
 		MultipartFile[] multipartFiles = fileUtils.storeDocumentFromDir(documents);
 		if (multipartFiles.length > 0) {
 			for (MultipartFile multipartFile : multipartFiles) {
@@ -126,37 +124,31 @@ public class AllianzBotAssesmentController {
 	 * @param allianzBotQuestion
 	 */
 	@PostMapping(value = "/assesment/answer")
-	public void storeUserChoiceAnswers(@RequestBody AllianzBotAssesmentQuestion allianzBotQuestion,
-			HttpSession session) {
+	public void storeUserChoiceAnswers(@RequestBody AllianzBotAssesmentQuestion allianzBotQuestion, @RequestHeader("User-Id") String userId) {
 		log.info("AllianzBotAssesmentController.saveQuestionsAnswer started");
-		assesmentMap.put(allianzBotQuestion.getQuestionId(), allianzBotQuestion);
+		assesmentMap.put(userId+AllianzBotConstants.AB_ASSESMENT_SPLITERATOR+allianzBotQuestion.getQuestionId(), allianzBotQuestion);
 		log.info("AllianzBotAssesmentController.saveQuestionsAnswer Finished");
 	}
 
-	@GetMapping(value = "/assesment/finished")
-	public @ResponseBody AllianzBotExam exitAssesment() throws SolrServerException, IOException {
+	@PostMapping(value = "/assesment/finished")
+	public @ResponseBody AllianzBotExam exitAssesment(@RequestHeader("User-Id") String userId) throws SolrServerException, IOException {
 		log.info("Assesment: {}", assesmentMap);
 		// load all the answers
 		// check the correct answers
-		AllianzBotExam exam = new AllianzBotExam();
-		double score = allianzBotAssesmentProcess.getAssesmentScore(assesmentMap);
-		exam.setScore(score);
-		exam.setFinishTime(LocalDateTime.now());
+		AllianzBotExam exam = allianzBotAssesmentProcess.getAssesmentScore(assesmentMap, userId);
 		assesmentMap.clear();
-		// prepare for the result for user and lead
-		// return the response
 		return exam;
 	}
 
-	/*@GetMapping(value = "/time")
-	@ResponseBody
-	public Integer timer(HttpServletRequest request) {
-		return getRemainingTime(request);
-	}
-
-	private int getRemainingTime(HttpServletRequest request) {
-		final long start = (long) request.getSession().getAttribute("examStarted");
-		final int remaining = (int) ((examTimeMins * 60) - ((Calendar.getInstance().getTimeInMillis() - start) / 1000));
-		return remaining;
-	}*/
+	/*
+	 * @GetMapping(value = "/time")
+	 * 
+	 * @ResponseBody public Integer timer(HttpServletRequest request) { return
+	 * getRemainingTime(request); }
+	 * 
+	 * private int getRemainingTime(HttpServletRequest request) { final long start =
+	 * (long) request.getSession().getAttribute("examStarted"); final int remaining
+	 * = (int) ((examTimeMins * 60) - ((Calendar.getInstance().getTimeInMillis() -
+	 * start) / 1000)); return remaining; }
+	 */
 }

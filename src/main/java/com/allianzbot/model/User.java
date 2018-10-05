@@ -9,17 +9,19 @@ public class User implements Serializable {
 	 */
 	private static final long serialVersionUID = 7702575245752451302L;
 
-	private long userId;
+	private String userId;
 
 	private String username;
 
 	private String password;
+	
+	private String role;
 
-	public long getUserId() {
+	public String getUserId() {
 		return userId;
 	}
 
-	public void setUserId(long userId) {
+	public void setUserId(String userId) {
 		this.userId = userId;
 	}
 
@@ -38,6 +40,16 @@ public class User implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
+	
+	
+
+	public String getRole() {
+		return role;
+	}
+
+	public void setRole(String role) {
+		this.role = role;
+	}
 
 	@Override
 	public String toString() {
@@ -48,6 +60,8 @@ public class User implements Serializable {
 		builder.append(username);
 		builder.append(", password=");
 		builder.append(password);
+		builder.append(", role=");
+		builder.append(role);
 		builder.append("]");
 		return builder.toString();
 	}

@@ -10,8 +10,8 @@ import org.springframework.web.multipart.MultipartFile;
 import org.xml.sax.SAXException;
 
 import com.allianzbot.exception.AllianzBotException;
-import com.allianzbot.model.AllianzBotAssesmentAnswer;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
+import com.allianzbot.model.AllianzBotExam;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 
 public interface IAllianzBotAssesmentProcess {
@@ -38,7 +38,7 @@ public interface IAllianzBotAssesmentProcess {
 	 * @throws IOException 
 	 * @throws SolrServerException 
 	 */
-	double getAssesmentScore(Map<Long, AllianzBotAssesmentQuestion> questionId) throws SolrServerException, IOException;
+	AllianzBotExam getAssesmentScore(Map<String, AllianzBotAssesmentQuestion> questionId, String userId) throws SolrServerException, IOException;
 
 	/**
 	 * Load Assesment by topics

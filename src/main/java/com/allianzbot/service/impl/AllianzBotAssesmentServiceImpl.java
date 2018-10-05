@@ -8,6 +8,8 @@ import java.util.stream.Collectors;
 
 import javax.annotation.PostConstruct;
 import javax.annotation.PreDestroy;
+import javax.inject.Inject;
+import javax.inject.Named;
 
 import org.apache.commons.codec.digest.DigestUtils;
 import org.apache.commons.collections4.CollectionUtils;
@@ -23,6 +25,9 @@ import org.apache.solr.common.SolrInputDocument;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.mail.MailException;
+import org.springframework.mail.MailSender;
+import org.springframework.mail.SimpleMailMessage;
 import org.springframework.stereotype.Service;
 
 import com.allianzbot.exception.AllianzBotException;
@@ -30,6 +35,7 @@ import com.allianzbot.model.AllianzBotAssesmentAnswer;
 import com.allianzbot.model.AllianzBotAssesmentObjectives;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotExam;
 import com.allianzbot.service.interfaces.IAllianzBotAssesmentService;
 import com.allianzbot.utils.AllianzBotConstants;
 
@@ -42,6 +48,17 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 	private String assesmentCollection;
 
 	private SolrClient client;
+	
+	@Inject
+	@Named("mailSender")
+	private MailSender mailSender;
+	
+	@Inject
+	@Named("templateMessage")
+    private SimpleMailMessage templateMessage;
+	
+	@Value("${email.user}")
+	private String leadEmailIs;
 
 	@Override
 	public UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse)
@@ -227,6 +244,26 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 			}
 		}
 		return answerQueryBuilder.toString();
+	}
+
+	@Override
+	public void sendAssesmentScoreMailToLead(AllianzBotExam exam) {
+        SimpleMailMessage msg = new SimpleMailMessage(this.templateMessage);
+        msg.setTo(leadEmailIs);
+        msg.setText("Hi Lead, User "+ exam.getUser().getUsername() 
+        		+ " scored " +exam.getPercentages()
+        		+ "% in" + exam.getTopic()
+        		+ ". The exam has been started at "
+        		+ exam.getStartTime()
+        		+ " and finished at "
+        		+ exam.getFinishTime());
+        try{
+            this.mailSender.send(msg);
+        }
+        catch(MailException ex) {
+            log.error(ex.getMessage());
+        }
+		
 	}
 
 }

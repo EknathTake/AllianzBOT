@@ -1,6 +1,9 @@
 package com.allianzbot.process.impl;
 
 import java.io.IOException;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -10,6 +13,7 @@ import java.util.stream.Stream;
 import javax.inject.Inject;
 import javax.inject.Named;
 
+import org.apache.commons.lang3.StringUtils;
 import org.apache.solr.client.solrj.SolrServerException;
 import org.apache.solr.client.solrj.response.UpdateResponse;
 import org.apache.tika.exception.TikaException;
@@ -24,11 +28,14 @@ import com.allianzbot.model.AllianzBotAssesmentAnswer;
 import com.allianzbot.model.AllianzBotAssesmentObjectives;
 import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
+import com.allianzbot.model.AllianzBotExam;
 import com.allianzbot.model.AllianzBotResponseStatus;
+import com.allianzbot.model.User;
 import com.allianzbot.process.interfaces.IAllianzBotAssesmentProcess;
 import com.allianzbot.process.interfaces.IAllianzBotProcess;
 import com.allianzbot.response.AllianzBotSolrCreateDocumentResponse;
 import com.allianzbot.service.interfaces.IAllianzBotAssesmentService;
+import com.allianzbot.utils.AllianzBotConstants;
 
 @Component("allianzBotAssesmentProcess")
 public class AllianzBotAssesmentProcessImpl implements IAllianzBotAssesmentProcess {
@@ -86,38 +93,69 @@ public class AllianzBotAssesmentProcessImpl implements IAllianzBotAssesmentProce
 
 	@Override
 	public List<AllianzBotAssesmentQuestion> loadAssesmentQuestions(String[] topics) throws SolrServerException, IOException {
-		return allianzBotAssesmentService.loadAssesmentQuestionsFromSolr(topics);
+		List<AllianzBotAssesmentQuestion> loadAssesmentQuestionsFromSolr = allianzBotAssesmentService.loadAssesmentQuestionsFromSolr(topics);
+		//load any 10 random questions from list
+		Collections.shuffle(loadAssesmentQuestionsFromSolr);
+		return loadAssesmentQuestionsFromSolr
+					.stream()
+					.limit(10)
+					.collect(Collectors.toList());
 	}
 
 	@Override
-	public double getAssesmentScore(Map<Long, AllianzBotAssesmentQuestion> assesmentMap) throws SolrServerException, IOException {
-		List<Long> ll = assesmentMap.values()
-				.stream()
-				.map(AllianzBotAssesmentQuestion::getQuestionId)
-				.collect(Collectors.toList());
-		List<AllianzBotAssesmentAnswer> assesmentAnswers = allianzBotAssesmentService.loadAssesmentAnswers(ll);
+	public AllianzBotExam getAssesmentScore(Map<String, AllianzBotAssesmentQuestion> assesmentMap, String userId) throws SolrServerException, IOException {
+		List<Long> questionIds = new ArrayList<>();
+		for(String currentKey : assesmentMap.keySet()){
+			String[] keyArr = StringUtils.split(currentKey, AllianzBotConstants.AB_ASSESMENT_SPLITERATOR);
+			String userID = keyArr[0];
+			if(userId.equals(userID)) {
+				Long questionId = Long.parseLong(keyArr[1]);
+				questionIds.add(questionId);
+				
+			}
+		}
+		
+		String topic = StringUtils.EMPTY;
+		List<AllianzBotAssesmentAnswer> assesmentAnswers = allianzBotAssesmentService.loadAssesmentAnswers(questionIds);
 		double score = 0;
 		for (AllianzBotAssesmentAnswer allianzBotAssesmentAnswer : assesmentAnswers) {
 			if(null != allianzBotAssesmentAnswer) {
 				/***** user question *****/
-				AllianzBotAssesmentQuestion question = assesmentMap.get(allianzBotAssesmentAnswer.getQuestionId());
-				AllianzBotAssesmentObjectives[] userObjectiveAnswers = question.getObjectives();
-				String userAnswer = Stream.of(userObjectiveAnswers)
-										.filter(Objects::nonNull)
-										.filter(AllianzBotAssesmentObjectives::isChecked)
-										.map(mapper -> mapper.getObjective())
-										.collect(Collectors.joining(","));	
-				for (AllianzBotAssesmentAnswer assesmentAnswer : assesmentAnswers) {
-					if(null != assesmentAnswer) {
-						if(userAnswer.equals(assesmentAnswer.getActualAnswer())
-								&& allianzBotAssesmentAnswer.getQuestionId() == assesmentAnswer.getQuestionId()) {
-							score +=5;
+				AllianzBotAssesmentQuestion question = assesmentMap.get(userId+AllianzBotConstants.AB_ASSESMENT_SPLITERATOR+allianzBotAssesmentAnswer.getQuestionId());
+				if(null != question) {
+					topic = question.getTopic();
+					AllianzBotAssesmentObjectives[] userObjectiveAnswers = question.getObjectives();
+					String userAnswer = Stream.of(userObjectiveAnswers)
+											.filter(Objects::nonNull)
+											.filter(AllianzBotAssesmentObjectives::isChecked)
+											.map(mapper -> mapper.getObjective())
+											.collect(Collectors.joining(","));	
+					for (AllianzBotAssesmentAnswer assesmentAnswer : assesmentAnswers) {
+						if(null != assesmentAnswer) {
+							if(userAnswer.equals(assesmentAnswer.getActualAnswer())
+									&& allianzBotAssesmentAnswer.getQuestionId() == assesmentAnswer.getQuestionId()) {
+								score +=5;
+							}
 						}
 					}
 				}
 			}
 		}
-		return score;
+		
+		AllianzBotExam exam = new AllianzBotExam();
+		exam.setFinishTime(LocalDateTime.now());
+		/**TODO: need to remove hard coded values for userName**/
+		User user = new User();
+		user.setUserId(userId);
+		user.setUsername("Eknath Take");
+		exam.setUser(user);
+		exam.setScore(score);
+		exam.setTopic(topic);
+		exam.setTotalMarks(questionIds.size()*5);
+		exam.setPercentages((exam.getScore()/exam.getTotalMarks())*100);
+		
+		allianzBotAssesmentService.sendAssesmentScoreMailToLead(exam);
+		return exam;
 	}
 
 }

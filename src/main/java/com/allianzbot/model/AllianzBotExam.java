@@ -17,6 +17,10 @@ public class AllianzBotExam implements Serializable {
 	private User user;
 
 	private double score;
+	
+	private double totalMarks;
+	
+	private double percentages;
 
 	private String topic;
 
@@ -59,6 +63,24 @@ public class AllianzBotExam implements Serializable {
 	public void setTopic(String topic) {
 		this.topic = topic;
 	}
+	
+	
+
+	public double getTotalMarks() {
+		return totalMarks;
+	}
+
+	public void setTotalMarks(double totalMarks) {
+		this.totalMarks = totalMarks;
+	}
+
+	public double getPercentages() {
+		return percentages;
+	}
+
+	public void setPercentages(double percentages) {
+		this.percentages = percentages;
+	}
 
 	@Override
 	public String toString() {
@@ -71,6 +93,10 @@ public class AllianzBotExam implements Serializable {
 		builder.append(user);
 		builder.append(", score=");
 		builder.append(score);
+		builder.append(", totalMarks=");
+		builder.append(totalMarks);
+		builder.append(", percentages=");
+		builder.append(percentages);
 		builder.append(", topic=");
 		builder.append(topic);
 		builder.append("]");
