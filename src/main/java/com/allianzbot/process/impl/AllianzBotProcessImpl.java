@@ -2,7 +2,6 @@ package com.allianzbot.process.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
@@ -208,7 +207,8 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 		if (StringUtils.isNotEmpty(query)) {
 			// get all the lemmas for user query
 			query = query + " "
-					+ Stream.of(allianzBotOpenNlpService.lemmatization(query)).filter(Objects::nonNull)
+					+ Stream.of(allianzBotOpenNlpService
+							.lemmatization(query)).filter(Objects::nonNull)
 							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "O"))
 							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "be")).distinct().map(lemma -> lemma)
 							.collect(Collectors.joining(" "));
@@ -229,14 +229,25 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 
 		// get the all the documents with the same answer to update the likes
 		Function<? super AllianzBotSearchResponse, ? extends AllianzBotSearchResponse> functionLikes = statement -> {
-			statement.setLikes(document.getLikes());
-			return statement;
+			return new AllianzBotSearchResponse.AllianzBotSearchResponseBuilder()
+					.setLikes(document.getLikes())
+					.setAllianzBotTestCenterData(statement.getAllianzBotTestCenterData())
+					.setAnswer(statement.getAnswer())
+					.setId(statement.getId())
+					.setQuestion(statement.getQuestion())
+					.setScore(statement.getScore())
+					.build();
 		};
-		Predicate<? super AllianzBotSearchResponse> predicateAnswer = statement -> statement.getAnswer()
-				.equalsIgnoreCase(document.getAnswer());
+		Predicate<? super AllianzBotSearchResponse> predicateAnswer = statement -> statement
+					.getAnswer()
+					.equalsIgnoreCase(document.getAnswer());
 
-		List<AllianzBotSearchResponse> duplicateAnswers = searchDocument(document.getQuestion(), false).getDocuments()
-				.parallelStream().filter(predicateAnswer).map(functionLikes).collect(Collectors.toList());
+		List<AllianzBotSearchResponse> duplicateAnswers = searchDocument(document.getQuestion(), false)
+					.getDocuments()
+					.parallelStream()
+					.filter(predicateAnswer)
+					.map(functionLikes)
+					.collect(Collectors.toList());
 
 		for (AllianzBotSearchResponse allianzBotSentence : duplicateAnswers) {
 			allianzBotSolrService.updateScore(allianzBotSentence);

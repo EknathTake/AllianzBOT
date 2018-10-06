@@ -43,8 +43,6 @@ import opennlp.tools.util.Span;
 import opennlp.tools.util.TrainingParameters;
 
 /**
- * TODO: need to work on static path, it's hard-coded for now. Service
- * Implementation for Natural Language Processing
  * 
  * @author eknath.take
  *
@@ -72,10 +70,11 @@ public class AllianzBotOpenNlpServiceImpl implements IAllianzBotOpenNlpService {
 
 			return IntStream.range(0, sentences.length).filter(i -> StringUtils.isNotEmpty(sentences[i]))
 					.mapToObj(i -> {
-						AllianzBotSearchResponse allianzBotSentence = new AllianzBotSearchResponse();
-						allianzBotSentence.setScore(probs[i]);
-						allianzBotSentence.setAnswer(sentences[i]);
-						return allianzBotSentence;
+						return new AllianzBotSearchResponse
+								.AllianzBotSearchResponseBuilder()
+								.setScore(probs[i])
+								.setAnswer(sentences[i])
+								.build();
 					}).collect(Collectors.toList());
 
 		} catch (FileNotFoundException e) {
@@ -136,28 +135,7 @@ public class AllianzBotOpenNlpServiceImpl implements IAllianzBotOpenNlpService {
 
 			// tokenize the paragraph
 			String[] tokens = tokenize(paragraph);
-
-			// tagger.topKSequences(tokens);
-
-			// Generating tags
 			String[] tags = tagger.tag(tokens);
-
-			// probability
-			// double[] prob = tagger.probs();
-
-			/** Sample code */
-			/*
-			 * List<AllianzBotPartOfSpeech> result = IntStream.range(0, tokens.length)
-			 * .mapToObj(i -> new AllianzBotPartOfSpeech(tokens[i], tags[i], prob[i]))
-			 * .filter(allianzBotPOS -> !StringUtils.equals(allianzBotPOS.getTags(), "."))
-			 * .collect(Collectors.toList()).stream()
-			 * .sorted(Comparator.comparing(AllianzBotPartOfSpeech::getProbability).reversed
-			 * ()) .collect(Collectors.toList());
-			 */
-			// log.info("In AllianzBotOpenNlpServiceImpl.partOfSpeechTagger result:
-			// {}",result);
-
-			// Instantiating the POSSample class
 
 			POSSample posSample = new POSSample(tokens, tags);
 			return posSample;
@@ -202,26 +180,14 @@ public class AllianzBotOpenNlpServiceImpl implements IAllianzBotOpenNlpService {
 			// tokenize the paragraph
 			String[] tokens = tokenize(paragraph);
 
-			// tagger.topKSequences(tokens);
-
 			// Generating tags
 			String[] tags = tagger.tag(tokens);
-
-			// loading the dictionary to input stream
 
 			// loading the lemmatizer with dictionary
 			DictionaryLemmatizer lemmatizer = new DictionaryLemmatizer(dictLemmatizer);
 
 			// finding the lemmas
 			String[] lemmas = lemmatizer.lemmatize(tokens, tags);
-
-			// printing the results
-			/*System.out.println("\nPrinting lemmas for the given sentence...");
-			System.out.println("WORD -POSTAG : LEMMA");
-			for (int i = 0; i < tokens.length; i++) {
-				System.out.println(tokens[i] + " -" + tags[i] + " : " + lemmas[i]);
-			}*/
-
 			return lemmas;
 
 		} catch (FileNotFoundException e) {

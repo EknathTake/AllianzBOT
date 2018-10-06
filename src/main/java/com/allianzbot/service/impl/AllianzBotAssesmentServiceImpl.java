@@ -37,6 +37,7 @@ import com.allianzbot.model.AllianzBotAssesmentQuestion;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.model.AllianzBotExam;
 import com.allianzbot.service.interfaces.IAllianzBotAssesmentService;
+import com.allianzbot.solrclient.initializer.SolrClientInitializer;
 import com.allianzbot.utils.AllianzBotConstants;
 
 @Service("allianzBotAssesmentService")
@@ -44,11 +45,6 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 
 	private Logger log = LoggerFactory.getLogger(AllianzBotAssesmentServiceImpl.class);
 
-	@Value("${url.solr.assesmentCollection}")
-	private String assesmentCollection;
-
-	private SolrClient client;
-	
 	@Inject
 	@Named("mailSender")
 	private MailSender mailSender;
@@ -59,6 +55,10 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 	
 	@Value("${email.user}")
 	private String leadEmailIs;
+	
+	@Inject
+	@Named("solrInitializer")
+	private SolrClientInitializer solrClientInitializer;
 
 	@Override
 	public UpdateResponse storeDocument(AllianzBotDocument allianzBotServiceResponse)
@@ -94,9 +94,9 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 						doc.addField(AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC, columns.get(4));
 					}
 
-					client.add(doc);
+					solrClientInitializer.client1.add(doc);
 					if (i % 100 == 0)
-						client.commit(); // periodically flush
+						solrClientInitializer.client1.commit(); // periodically flush
 				}
 				i++;
 			}
@@ -107,24 +107,11 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 			doc.addField(AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_TOTAL_LIKES, new Double(0.0));
 			doc.addField(AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_ID, DigestUtils.md5Hex((String) content));
 			doc.addField(AllianzBotConstants.ABKnowledgeSharing.AB_SOLR_FIELD_CONTENT, (String) content);
-			client.add(doc);
+			solrClientInitializer.client1.add(doc);
 		}
-		return client.commit();
+		return solrClientInitializer.client1.commit();
 	}
 
-	@PostConstruct
-	public void initSolr() {
-		log.info("SOLR server is starting.");
-		client = new HttpSolrClient.Builder(assesmentCollection).build();
-		log.info("SOLR server is started.");
-	}
-
-	@PreDestroy
-	public void destroySolr() throws IOException {
-
-		client.close();
-		log.info("SOLR server is stopped.");
-	}
 
 	@Override
 	public List<AllianzBotAssesmentQuestion> loadAssesmentQuestionsFromSolr(String[] topics)
@@ -139,7 +126,7 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 				AllianzBotConstants.ABAssesmentQuestion.AB_TOPIC);
 
 		log.info("Solr Query:{}", solrQuery);
-		SolrDocumentList assesmentQuestions = client.query(solrQuery).getResults();
+		SolrDocumentList assesmentQuestions = solrClientInitializer.client1.query(solrQuery).getResults();
 		return assesmentQuestions.stream().map(assesmentQuestion -> {
 
 			AllianzBotAssesmentQuestion allianzBotAssesmentQuestion = new AllianzBotAssesmentQuestion();
@@ -208,7 +195,7 @@ public class AllianzBotAssesmentServiceImpl implements IAllianzBotAssesmentServi
 				AllianzBotConstants.ABAssesmentAnswers.AB_CORRECT_ANSWER);
 
 		log.info("Inside AllianzBotAssesmentServiceImpl.loadAssesmentAnswers Solr Query :{}", solrQuery);
-		SolrDocumentList assesmentQuestions = client.query(solrQuery).getResults();
+		SolrDocumentList assesmentQuestions = solrClientInitializer.client1.query(solrQuery).getResults();
 		
 		return assesmentQuestions.stream()
 								.map(actualAnswer -> {

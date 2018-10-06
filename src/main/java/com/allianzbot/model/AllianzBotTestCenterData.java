@@ -2,7 +2,7 @@ package com.allianzbot.model;
 
 import java.io.Serializable;
 
-public class AllianzBotTestData implements Serializable {
+public class AllianzBotTestCenterData implements Serializable {
 
 	/**
 	 * 

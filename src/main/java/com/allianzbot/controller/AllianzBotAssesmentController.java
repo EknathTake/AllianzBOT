@@ -75,9 +75,6 @@ public class AllianzBotAssesmentController {
 			@RequestParam(name = "topic") String topic)
 			throws SolrServerException, IOException {
 		log.info("AllianzBotAssesmentController.loadAssessment() topic is: {}", topic);
-		//request.getSession().setAttribute("examStarted", new Date().getTime());
-		// final int remaining = getRemainingTime(request);
-		// model.addAttribute("examTime", remaining);
 		return allianzBotAssesmentProcess.loadAssesmentQuestions(new String[] { topic });
 	}
 
@@ -140,15 +137,4 @@ public class AllianzBotAssesmentController {
 		return exam;
 	}
 
-	/*
-	 * @GetMapping(value = "/time")
-	 * 
-	 * @ResponseBody public Integer timer(HttpServletRequest request) { return
-	 * getRemainingTime(request); }
-	 * 
-	 * private int getRemainingTime(HttpServletRequest request) { final long start =
-	 * (long) request.getSession().getAttribute("examStarted"); final int remaining
-	 * = (int) ((examTimeMins * 60) - ((Calendar.getInstance().getTimeInMillis() -
-	 * start) / 1000)); return remaining; }
-	 */
 }

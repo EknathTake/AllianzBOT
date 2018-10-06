@@ -2,8 +2,6 @@ package com.allianzbot.model;
 
 import java.io.Serializable;
 
-import javax.validation.constraints.Max;
-import javax.validation.constraints.Min;
 import javax.validation.constraints.NotEmpty;
 
 /**
@@ -12,7 +10,12 @@ import javax.validation.constraints.NotEmpty;
  * @author eknath.take
  *
  */
-public class AllianzBotSearchResponse {
+public class AllianzBotSearchResponse implements Serializable {
+
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = -2619829419136110636L;
 
 	@NotEmpty(message = "Null id not acceptable.")
 	private String id;
@@ -35,25 +38,15 @@ public class AllianzBotSearchResponse {
 	// @Min(value = 0L, message = "Invalid value for the score")
 	private double score;
 
+	private AllianzBotTestCenterData allianzBotTestCenterData;
+
 	/**
 	 * likes
 	 */
 	private double likes;
 
-	private String failedLog;
-
-	private String failedCategory;
-
 	public String getId() {
 		return id;
-	}
-
-	public void setId(String id) {
-		this.id = id;
-	}
-
-	public void setQuestion(String question) {
-		this.question = question;
 	}
 
 	public String getQuestion() {
@@ -64,40 +57,28 @@ public class AllianzBotSearchResponse {
 		return answer;
 	}
 
-	public void setAnswer(String answer) {
-		this.answer = answer;
-	}
-
 	public double getScore() {
 		return score;
-	}
-
-	public void setScore(double score) {
-		this.score = score;
 	}
 
 	public double getLikes() {
 		return likes;
 	}
 
-	public void setLikes(double likes) {
-		this.likes = likes;
+	public AllianzBotTestCenterData getAllianzBotTestCenterData() {
+		return allianzBotTestCenterData;
 	}
 
-	public String getFailedLog() {
-		return failedLog;
+	public AllianzBotSearchResponse() {
 	}
 
-	public void setFailedLog(String failedLog) {
-		this.failedLog = failedLog;
-	}
-
-	public String getFailedCategory() {
-		return failedCategory;
-	}
-
-	public void setFailedCategory(String failedCategory) {
-		this.failedCategory = failedCategory;
+	public AllianzBotSearchResponse(AllianzBotSearchResponseBuilder builder) {
+		this.id = builder.id;
+		this.question = builder.question;
+		this.answer = builder.answer;
+		this.score = builder.score;
+		this.likes = builder.likes;
+		this.allianzBotTestCenterData = builder.allianzBotTestCenterData;
 	}
 
 	@Override
@@ -111,26 +92,12 @@ public class AllianzBotSearchResponse {
 		builder.append(answer);
 		builder.append(", score=");
 		builder.append(score);
+		builder.append(", allianzBotTestCenterData=");
+		builder.append(allianzBotTestCenterData);
 		builder.append(", likes=");
 		builder.append(likes);
-		builder.append(", failedLog=");
-		builder.append(failedLog);
-		builder.append(", failedCategory=");
-		builder.append(failedCategory);
 		builder.append("]");
 		return builder.toString();
-	}
-	
-	public AllianzBotSearchResponse() {}	
-
-	public AllianzBotSearchResponse(AllianzBotSearchResponseBuilder builder) {
-		this.id = builder.id;
-		this.question = builder.question;
-		this.answer = builder.answer;
-		this.score = builder.score;
-		this.likes = builder.likes;
-		this.failedLog = builder.failedLog;
-		this.failedCategory = builder.failedCategory;
 	}
 
 	public static class AllianzBotSearchResponseBuilder {
@@ -157,9 +124,7 @@ public class AllianzBotSearchResponse {
 		 */
 		private double likes;
 
-		private String failedLog;
-
-		private String failedCategory;
+		private AllianzBotTestCenterData allianzBotTestCenterData;
 
 		public AllianzBotSearchResponseBuilder(AllianzBotSearchResponse response) {
 			this.id = response.id;
@@ -167,20 +132,10 @@ public class AllianzBotSearchResponse {
 			this.answer = response.answer;
 			this.score = response.score;
 			this.likes = response.likes;
-			this.failedLog = response.failedLog;
-			this.failedCategory = response.failedCategory;
+			this.allianzBotTestCenterData = response.allianzBotTestCenterData;
 		}
-		public AllianzBotSearchResponseBuilder() {}
-		
-		public AllianzBotSearchResponseBuilder(String id, String question, String answer, double score, double likes,
-				String failedLog, String failedCategory) {
-			this.id = id;
-			this.question = question;
-			this.answer = answer;
-			this.score = score;
-			this.likes = likes;
-			this.failedLog = failedLog;
-			this.failedCategory = failedCategory;
+
+		public AllianzBotSearchResponseBuilder() {
 		}
 
 		public AllianzBotSearchResponseBuilder setId(String id) {
@@ -208,13 +163,9 @@ public class AllianzBotSearchResponse {
 			return this;
 		}
 
-		public AllianzBotSearchResponseBuilder setFailedLog(String failedLog) {
-			this.failedLog = failedLog;
-			return this;
-		}
-
-		public AllianzBotSearchResponseBuilder setFailedCategory(String failedCategory) {
-			this.failedCategory = failedCategory;
+		public AllianzBotSearchResponseBuilder setAllianzBotTestCenterData(
+				AllianzBotTestCenterData allianzBotTestCenterData) {
+			this.allianzBotTestCenterData = allianzBotTestCenterData;
 			return this;
 		}
 
