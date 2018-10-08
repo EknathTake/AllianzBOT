@@ -113,15 +113,15 @@ public class AllianzBotController {
 
 	@PutMapping(value = "/update/document")
 	public ResponseEntity<AllianzBotSolrCreateDocumentResponse> updateSolrDocument(
-			@RequestBody @Valid AllianzBotSearchResponse document, BindingResult bindingResult)
+			@RequestBody AllianzBotSearchResponse document)
 			throws SolrServerException, IOException, AllianzBotException, SAXException, TikaException {
 
 		log.debug("AllianzBotController.updateSolrDocument Started Document is :{}", document);
 
-		if (bindingResult.hasErrors()) {
+		/*if (bindingResult.hasErrors()) {
 			log.info("Inside AllianzBotController.updateSolrDocument validation fail");
 			throw new AllianzBotException(400, bindingResult.getAllErrors().toString());
-		}
+		}*/
 		log.debug("AllianzBotController.updateSolrDocument Finished");
 		return new ResponseEntity<>(botTextExtractorProcess.updateScore(document), HttpStatus.OK);
 	}
