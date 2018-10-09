@@ -28,7 +28,6 @@ import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.xml.sax.SAXException;
 
-import com.allianzbot.controller.AllianzBotController;
 import com.allianzbot.exception.AllianzBotException;
 import com.allianzbot.model.AllianzBotDocument;
 import com.allianzbot.service.interfaces.IAllianzBotOpenNlpService;
@@ -42,7 +41,7 @@ import com.allianzbot.service.interfaces.IAllianzBotTextExtractorService;
 @Service(value = "allianzBotTextExtractorService")
 public class AllianzBotTextExtractorServiceImpl implements IAllianzBotTextExtractorService {
 
-	private static final Logger log = LoggerFactory.getLogger(AllianzBotController.class);
+	private static final Logger log = LoggerFactory.getLogger(AllianzBotTextExtractorServiceImpl.class);
 
 	private static final int MAX_VALUE = Integer.MAX_VALUE;
 
@@ -63,7 +62,7 @@ public class AllianzBotTextExtractorServiceImpl implements IAllianzBotTextExtrac
 		ooXmlParser.parse(inputstream, handler, metadata, pcontext);
 
 		AllianzBotDocument allianzBotServiceResponse = new AllianzBotDocument();
-		log.info("Content: {}", handler.toString());
+		//log.info("Content: {}", handler.toString());
 		allianzBotServiceResponse.setContent(handler.toString());
 		return allianzBotServiceResponse;
 	}
@@ -81,7 +80,7 @@ public class AllianzBotTextExtractorServiceImpl implements IAllianzBotTextExtrac
 		msofficeparser.parse(inputstream, handler, metadata, pcontext);
 
 		AllianzBotDocument allianzBotServiceResponse = new AllianzBotDocument();
-		log.info("Content: {}", handler.toString());
+		//log.info("Content: {}", handler.toString());
 		allianzBotServiceResponse.setContent(handler.toString());
 		return allianzBotServiceResponse;
 	}
@@ -100,7 +99,7 @@ public class AllianzBotTextExtractorServiceImpl implements IAllianzBotTextExtrac
 		texTParser.parse(inputstream, handler, metadata, pcontext);
 
 		AllianzBotDocument allianzBotServiceResponse = new AllianzBotDocument();
-		log.info("Content: {}", handler.toString());
+		//log.info("Content: {}", handler.toString());
 		allianzBotServiceResponse.setContent(handler.toString());
 		return allianzBotServiceResponse;
 	}

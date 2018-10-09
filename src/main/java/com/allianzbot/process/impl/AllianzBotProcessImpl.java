@@ -245,6 +245,8 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 		List<AllianzBotSearchResponse> duplicateAnswers = searchDocument(document.getQuestion(), false)
 					.getDocuments()
 					.parallelStream()
+					.filter(Objects::nonNull)
+					.filter(x-> null != x.getAnswer())
 					.filter(predicateAnswer)
 					.map(functionLikes)
 					.collect(Collectors.toList());
