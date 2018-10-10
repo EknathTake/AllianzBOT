@@ -2,14 +2,12 @@ package com.allianzbot.process.impl;
 
 import java.io.IOException;
 import java.io.InputStream;
-import java.util.Arrays;
 import java.util.Date;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Objects;
 import java.util.Set;
-import java.util.TreeSet;
 import java.util.function.Function;
-import java.util.function.Predicate;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
@@ -206,16 +204,19 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 			throws SolrServerException, InvalidFormatException, IOException, AllianzBotException {
 		if (StringUtils.isNotEmpty(query)) {
 			// get all the lemmas for user query
-			query = query + " "
-					+ Stream.of(allianzBotOpenNlpService
-							.lemmatization(query)).filter(Objects::nonNull)
-							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "O"))
-							.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "be")).distinct().map(lemma -> lemma)
-							.collect(Collectors.joining(" "));
+			String lemmas = Stream.of(allianzBotOpenNlpService
+					.lemmatization(query)).filter(Objects::nonNull)
+					.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "O"))
+					.filter(lemma -> !StringUtils.equalsIgnoreCase(lemma, "be")).distinct().map(lemma -> lemma)
+					.collect(Collectors.joining(" "));
+			query = query + " "+ lemmas;
 
 			// removing duplicates keywords from the query...
-			TreeSet<String> seen = new TreeSet<>(String.CASE_INSENSITIVE_ORDER);
-			seen.addAll(Arrays.asList(query.split("\\s")));
+			Set<String> seen = new LinkedHashSet<>();
+			String[] splitedQuery = query.split("\\s");
+			for (String string : splitedQuery) {
+				seen.add(string);
+			}
 			query = FileUtils.removeStopWords(String.join(" ", seen));
 			return allianzBotSolrService.searchDocuments(query, isSearch);
 		} else {
@@ -238,30 +239,59 @@ public class AllianzBotProcessImpl implements IAllianzBotProcess {
 					.setScore(statement.getScore())
 					.build();
 		};
-		Predicate<? super AllianzBotSearchResponse> predicateAnswer = statement -> statement
-					.getAnswer()
-					.equalsIgnoreCase(document.getAnswer());
 
-		List<AllianzBotSearchResponse> duplicateAnswers = searchDocument(document.getQuestion(), false)
-					.getDocuments()
+		List<AllianzBotSearchResponse> documents = searchDocument(document.getQuestion(), false).getDocuments();
+		List<AllianzBotSearchResponse> allianzBotSearchResponseList = documents
 					.parallelStream()
 					.filter(Objects::nonNull)
 					.filter(x-> null != x.getAnswer())
-					.filter(predicateAnswer)
+					.filter(allianzBotSearchResponse -> allianzBotSearchResponse
+							.getAnswer()
+							.equalsIgnoreCase(document.getAnswer()))
 					.map(functionLikes)
 					.collect(Collectors.toList());
-
-		for (AllianzBotSearchResponse allianzBotSentence : duplicateAnswers) {
-			allianzBotSolrService.updateScore(allianzBotSentence);
+		
+		List<AllianzBotSearchResponse> duplicateTestCenterDataList = documents.parallelStream()
+					.filter(Objects::nonNull)
+					.filter(allianzBotSearchResponse -> null == allianzBotSearchResponse.getAnswer()
+													&& null != allianzBotSearchResponse.getAllianzBotTestCenterData())
+					.filter(allianzBotSearchResponse -> StringUtils.equalsIgnoreCase(
+							allianzBotSearchResponse.getAllianzBotTestCenterData().getTeam(),
+							document.getAllianzBotTestCenterData().getTeam())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getTestCaseId(),
+									document.getAllianzBotTestCenterData().getTestCaseId())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getExecutionDate(),
+									document.getAllianzBotTestCenterData().getExecutionDate())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getFailedRunCount(),
+									document.getAllianzBotTestCenterData().getFailedRunCount())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getDefectIdStr(),
+									document.getAllianzBotTestCenterData().getDefectIdStr())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getFailureCategory(),
+									document.getAllianzBotTestCenterData().getFailureCategory())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getFailedLog(),
+									document.getAllianzBotTestCenterData().getFailedLog())
+							&& StringUtils.equalsIgnoreCase(allianzBotSearchResponse.getAllianzBotTestCenterData().getDefectId(),
+									document.getAllianzBotTestCenterData().getDefectId()))
+					.map(functionLikes)
+					.collect(Collectors.toList());
+		
+		allianzBotSearchResponseList.addAll(duplicateTestCenterDataList);
+		if(allianzBotSearchResponseList.size()==0)
+			allianzBotSolrService.updateScore(document);
+		else {
+			for (AllianzBotSearchResponse allianzBotSentence : allianzBotSearchResponseList) {
+				if(null != allianzBotSentence)
+					allianzBotSolrService.updateScore(allianzBotSentence);
+			}
 		}
-
+		
 		AllianzBotDocument allianzBotDocument = new AllianzBotDocument();
 		allianzBotDocument.setContent(document);
 		allianzBotDocument.setId(document.getId());
 		AllianzBotSolrCreateDocumentResponse mapServiceToProcessResponse = mapServiceToProcessResponse(
 				allianzBotDocument, null);
 		AllianzBotResponseStatus status = new AllianzBotResponseStatus(new Date(), 200,
-				"Document updated successfully");
+				"Thanks for your Contribution!");
 		mapServiceToProcessResponse.setStatus(status);
 		return mapServiceToProcessResponse;
 	}

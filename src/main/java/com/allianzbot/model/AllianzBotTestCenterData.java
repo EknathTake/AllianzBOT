@@ -2,6 +2,10 @@ package com.allianzbot.model;
 
 import java.io.Serializable;
 
+import org.springframework.format.annotation.DateTimeFormat;
+
+import com.fasterxml.jackson.annotation.JsonFormat;
+
 public class AllianzBotTestCenterData implements Serializable {
 
 	/**
@@ -23,6 +27,8 @@ public class AllianzBotTestCenterData implements Serializable {
 
 	private String testLabPath;
 
+	@JsonFormat(pattern="yyyy-MM-dd")
+	@DateTimeFormat(iso = DateTimeFormat.ISO.TIME)
 	private String executionDate;
 
 	private String executionStatus;
@@ -39,7 +45,17 @@ public class AllianzBotTestCenterData implements Serializable {
 
 	private String failureCategory;
 
-	private long defectId;
+	private String defectId;
+	
+	private long errorCount;
+	
+	public long getErrorCount() {
+		return errorCount;
+	}
+	
+	public void setErrorCount(long errorCount) {
+		this.errorCount = errorCount;
+	}
 
 	public String getTeam() {
 		return team;
@@ -161,18 +177,18 @@ public class AllianzBotTestCenterData implements Serializable {
 		this.failureCategory = failureCategory;
 	}
 
-	public long getDefectId() {
+	public String getDefectId() {
 		return defectId;
 	}
 
-	public void setDefectId(long defectId) {
+	public void setDefectId(String defectId) {
 		this.defectId = defectId;
 	}
 
 	@Override
 	public String toString() {
 		StringBuilder builder = new StringBuilder();
-		builder.append("AllianzBotTestData [team=");
+		builder.append("AllianzBotTestCenterData [team=");
 		builder.append(team);
 		builder.append(", testCaseId=");
 		builder.append(testCaseId);
@@ -204,6 +220,8 @@ public class AllianzBotTestCenterData implements Serializable {
 		builder.append(failureCategory);
 		builder.append(", defectId=");
 		builder.append(defectId);
+		builder.append(", errorCount=");
+		builder.append(errorCount);
 		builder.append("]");
 		return builder.toString();
 	}

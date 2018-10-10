@@ -133,6 +133,10 @@ public class AllianzBotAssesmentController {
 		// load all the answers
 		// check the correct answers
 		AllianzBotExam exam = allianzBotAssesmentProcess.getAssesmentScore(assesmentMap, userId);
+		if(Double.compare(exam.getPercentages(), 70) >= 0)
+			exam.setFinalResult("Congratulation, you have cleared the P0 level.");
+		else
+			exam.setFinalResult("Pease revisit the Trainings for "+exam.getTopic());
 		assesmentMap.clear();
 		return exam;
 	}

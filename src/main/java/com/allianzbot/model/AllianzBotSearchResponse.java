@@ -90,10 +90,10 @@ public class AllianzBotSearchResponse implements Serializable {
 		builder.append(question);
 		builder.append(", answer=");
 		builder.append(answer);
-		builder.append(", score=");
-		builder.append(score);
 		builder.append(", allianzBotTestCenterData=");
 		builder.append(allianzBotTestCenterData);
+		builder.append(", score=");
+		builder.append(score);
 		builder.append(", likes=");
 		builder.append(likes);
 		builder.append("]");
