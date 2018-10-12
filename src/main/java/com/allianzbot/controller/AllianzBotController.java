@@ -140,7 +140,7 @@ public class AllianzBotController {
 				log.info("Extracting content from {} finished.", fileName);
 			}
 		}
-		log.info("All new documents are stored successfully");
+		log.info("All newly extracted content stored successfully");
 	}
 
 }

@@ -14,8 +14,10 @@ public class User implements Serializable {
 	private String username;
 
 	private String password;
-	
+
 	private String role;
+
+	private SkillInfo skillInfo;
 
 	public String getUserId() {
 		return userId;
@@ -40,8 +42,6 @@ public class User implements Serializable {
 	public void setPassword(String password) {
 		this.password = password;
 	}
-	
-	
 
 	public String getRole() {
 		return role;
@@ -49,6 +49,14 @@ public class User implements Serializable {
 
 	public void setRole(String role) {
 		this.role = role;
+	}
+
+	public SkillInfo getSkillInfo() {
+		return skillInfo;
+	}
+
+	public void setSkillInfo(SkillInfo skillInfo) {
+		this.skillInfo = skillInfo;
 	}
 
 	@Override
@@ -62,6 +70,8 @@ public class User implements Serializable {
 		builder.append(password);
 		builder.append(", role=");
 		builder.append(role);
+		builder.append(", skillInfo=");
+		builder.append(skillInfo);
 		builder.append("]");
 		return builder.toString();
 	}
